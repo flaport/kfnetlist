@@ -318,6 +318,26 @@ fn placed_netlist_round_trip_and_flatten_preserve_surviving_geometry() {
 }
 
 #[test]
+fn removing_absent_or_isolated_instances_does_not_create_empty_nets() {
+    let mut nl = Netlist::default();
+    nl.remove_instances(vec!["absent".into()]).unwrap();
+    assert!(nl.nets.is_empty());
+
+    nl.create_inst(
+        "isolated".into(),
+        "pdk".into(),
+        "leaf".into(),
+        json!({}),
+        1,
+        1,
+    )
+    .unwrap();
+    nl.create_net([reference("isolated", "p")]).unwrap();
+    nl.remove_instances(vec!["isolated".into()]).unwrap();
+    assert!(nl.nets.is_empty());
+}
+
+#[test]
 fn hierarchical_flattening_is_available_without_python() {
     let mut child = Netlist::default();
     child

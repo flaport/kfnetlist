@@ -2,46 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
+
+from ._protocols import ElectricalRootCellLike as _RootCellLike
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
     from klayout import db as kdb
-
-
-class _PortLike(Protocol):
-    name: str
-    port_type: str
-    trans: kdb.Trans
-
-    @property
-    def layer_info(self) -> kdb.LayerInfo: ...
-
-
-class _CellLike(Protocol):
-    name: str
-
-    @property
-    def factory_name(self) -> str: ...
-    @property
-    def ports(self) -> Iterable[_PortLike]: ...
-    def has_factory_name(self) -> bool: ...
-    def cell_index(self) -> int: ...
-
-
-class _KCLLike(Protocol):
-    layout: kdb.Layout
-
-    @property
-    def connectivity(self) -> Sequence[Sequence[kdb.LayerInfo]]: ...
-    def __getitem__(self, key: int, /) -> _CellLike: ...
-
-
-class _RootCellLike(_CellLike, Protocol):
-    @property
-    def kcl(self) -> _KCLLike: ...
-    def called_cells(self) -> Iterable[int]: ...
 
 
 def l2n_elec(

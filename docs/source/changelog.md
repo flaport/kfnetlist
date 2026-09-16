@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- **Zero Python runtime dependencies** — protobuf and YAML parsing now run
+  entirely in the native extension. The duplicate Python schema converters and
+  generated protobuf module were removed. Pydantic interoperability remains
+  available when applications install Pydantic separately.
+- **Pure connectivity core** — PIC documents, YAML, and protobuf moved from
+  `kfnetlist-core` into the new `kfnetlist-schema` crate.
+- **Instance removal** no longer creates empty nets when an absent or isolated
+  instance is removed.
 - **Instance metadata** — `NetlistInstance.info` and `PlacedInstance.info`
   carry JSON-compatible dictionaries, accepted through keyword-only `info=`
   constructor and `create_inst()` arguments. Extraction copies named kfactory

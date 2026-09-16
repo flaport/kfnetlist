@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 kfnetlist-core = { path = "../kfnetlist-core" }
+kfnetlist-schema = { path = "../kfnetlist-schema" }
 pyo3 = { version = "0.23", features = ["extension-module", "abi3-py312"] }
 pythonize = "0.23"
 serde.workspace = true

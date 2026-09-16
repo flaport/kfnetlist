@@ -1,5 +1,5 @@
-use kfnetlist_core::schema::{proto, Module, TopLevelModule};
 use kfnetlist_core::{NetMember, Netlist};
+use kfnetlist_schema::{proto, Module, TopLevelModule};
 use prost::Message;
 use serde_json::json;
 

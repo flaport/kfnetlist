@@ -2,7 +2,7 @@
 
 **kfnetlist** is a standalone, Rust-backed netlist schema for [kfactory](https://github.com/gdsfactory/kfactory) and netlist tooling.
 
-It provides a fast, type-safe data model for circuit connectivity — instances, nets, ports, and arrays — with full JSON/dict serialization and Pydantic v2 integration. The core is implemented in Rust via PyO3 and has zero runtime Python dependencies.
+It provides a fast, type-safe data model for circuit connectivity — instances, nets, ports, and arrays — with full JSON/dict serialization and optional Pydantic v2 integration. The core is implemented in Rust via PyO3 and has zero runtime Python dependencies.
 
 ---
 
@@ -65,7 +65,8 @@ It provides a fast, type-safe data model for circuit connectivity — instances,
 - **Rust core** — `Netlist`, `Net`, and port types implemented in Rust for speed and memory safety
 - **Zero runtime dependencies** — the base package has no Python dependencies
 - **Full serialization** — `to_json()` / `from_json()` and `to_dict()` / `from_dict()` on every type
-- **Pydantic v2 support** — all types implement `__get_pydantic_core_schema__`
+- **Optional Pydantic v2 support** — install Pydantic separately; all types
+  implement `__get_pydantic_core_schema__`
 - **Equivalent ports** — fold electrically-equivalent ports into canonical names for netlist comparison
 - **Hierarchical flattening** — replace instances by the contents of their own cell's netlist, rewiring nets across the two levels
 - **Instance removal** — delete sub-cell instances, merging the nets they touched

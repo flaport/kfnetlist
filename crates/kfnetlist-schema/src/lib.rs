@@ -24,7 +24,7 @@ pub(crate) fn error(e: impl std::fmt::Display) -> Error {
 }
 
 // Preserve the ergonomic JSON fields while enforcing protobuf oneof semantics
-// in the core for every caller (including nested dict and YAML construction).
+// in the schema crate for every caller (including nested dict and YAML construction).
 #[derive(Clone, Default, serde::Serialize, serde::Deserialize)]
 #[serde(default, deny_unknown_fields)]
 struct ParameterValueWire {

@@ -144,8 +144,8 @@ print("Dict round-trip ✓")
 # %% [markdown]
 # ## Pydantic integration
 #
-# All kfnetlist types implement `__get_pydantic_core_schema__`, so they can be
-# used directly as fields in Pydantic v2 models without custom validators.
+# When Pydantic is installed separately, all kfnetlist types can be used
+# directly as Pydantic v2 fields without custom validators.
 #
 # ```python
 # from pydantic import BaseModel

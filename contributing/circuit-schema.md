@@ -1,14 +1,14 @@
 # Circuit schema
 
-`kfnetlist_core::schema` owns the hierarchical PIC document model, YAML parsing,
+`kfnetlist_schema` owns the hierarchical PIC document model, YAML parsing,
 netlist elaboration, and protobuf conversion. It is usable from Rust without
-Python. `crates/kfnetlist-core/proto/circuit.proto` is the protobuf source;
+Python. `crates/kfnetlist-schema/proto/circuit.proto` is the protobuf source;
 `prost-build` generates the Rust messages into Cargo's `OUT_DIR`. The build uses
 a vendored `protoc`, so developers and wheel builders do not need to install it.
 Generated code is neither checked in nor written into the source tree.
 
 ```rust
-use kfnetlist_core::schema::{proto, TopLevelModule};
+use kfnetlist_schema::{proto, TopLevelModule};
 use prost::Message;
 
 let document = TopLevelModule::from_yaml(
@@ -71,7 +71,7 @@ or routes; retain the document or protobuf representation when those are needed.
 Unconnected top-level ports use a self-reference in a recovered module's `ports`
 mapping and do not introduce a new net when elaborated again.
 
-Run `cargo test -p kfnetlist-core` for Python-independent schema and wire tests,
+Run `cargo test -p kfnetlist-schema` for Python-independent schema and wire tests,
 and `uv run --extra dev --with pydantic pytest` for the Python suite. A Python test
 blocks imports of Python schema and codec packages in a fresh interpreter to
 check that the Rust path is sufficient.

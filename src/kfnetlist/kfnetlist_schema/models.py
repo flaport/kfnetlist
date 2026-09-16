@@ -32,8 +32,3 @@ from kfnetlist._native import (
 
 ModuleNetlist = Netlist
 InstanceRef = NetlistInstance
-
-_PROP_PLACEMENTS = "__placements__"
-_PROP_ROUTES = "__routes__"
-_PROP_INFO = "__info__"
-_PROP_ARRAY = "__array__"

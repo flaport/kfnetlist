@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from itertools import chain
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING, TypeVar
 
 from kfnetlist import Net, NetlistPort, PortArrayRef, PortRef
 from kfnetlist.port_check import (
@@ -14,65 +14,42 @@ from kfnetlist.port_check import (
     check_connection,
 )
 
+from ._protocols import (
+    BaseLike as _BaseLike,
+    CellLike as _CellLike,
+    InstanceLike as _InstanceLike,
+    PortLike as _PortLike,
+)
+
 if TYPE_CHECKING:
-    from collections.abc import Iterable, Sequence
+    from collections.abc import Iterator, Sequence
 
     from klayout import db as kdb
 
-
-class _BaseLike(Protocol):
-    """Subset of ``kfactory.port.BasePort`` consumed here."""
-
-    trans: kdb.Trans | None
-    dcplx_trans: kdb.DCplxTrans | None
-    port_type: str
-    name: str
-
-    @property
-    def kcl(self) -> _KCLLike: ...
-
-    def transformed(
-        self,
-        trans: kdb.Trans | kdb.DCplxTrans,
-        post_trans: kdb.Trans | kdb.DCplxTrans = ...,
-    ) -> _BaseLike: ...
+_T = TypeVar("_T")
 
 
-class _CrossSectionWrapperLike(Protocol):
-    @property
-    def base(self) -> _CrossSectionLike: ...
+def _forward_neighbors(
+    buckets: dict[tuple[int, int], dict[str, list[_T]]],
+    position: tuple[int, int],
+    layer: str,
+) -> Iterator[_T]:
+    """Yield the +x/+y buckets used to compare each adjacent pair once."""
+    x, y = position
+    yield from buckets.get((x + 1, y), {}).get(layer, ())
+    yield from buckets.get((x, y + 1), {}).get(layer, ())
 
 
-class _PortLike(Protocol):
-    @property
-    def base(self) -> _BaseLike: ...
-
-    @property
-    def name(self) -> str: ...
-
-    @property
-    def port_type(self) -> str: ...
-
-    @property
-    def cross_section(self) -> _CrossSectionWrapperLike: ...
-
-
-class _InstanceLike(Protocol):
-    name: str
-    na: int
-    nb: int
-
-    @property
-    def instance(self) -> kdb.Instance: ...
-    @property
-    def ports(self) -> Iterable[_PortLike]: ...
-
-
-class _CellLike(Protocol):
-    @property
-    def ports(self) -> Iterable[_PortLike]: ...
-    @property
-    def insts(self) -> Iterable[_InstanceLike]: ...
+def _nearby(
+    buckets: dict[tuple[int, int], dict[str, list[_T]]],
+    position: tuple[int, int],
+    layer: str,
+) -> Iterator[_T]:
+    """Yield candidates in the surrounding 3×3 snapped-position window."""
+    x, y = position
+    for nx in range(x - 1, x + 2):
+        for ny in range(y - 1, y + 2):
+            yield from buckets.get((nx, ny), {}).get(layer, ())
 
 
 @dataclass(frozen=True, slots=True)
@@ -218,16 +195,8 @@ def get_optical_nets(
 
     for h, cellport_layer_dict in cell_ports.items():
         for layer, cellports in cellport_layer_dict.items():
-            additional_cellports = cell_ports.get((h[0] + 1, h[1]), {}).get(
-                layer, []
-            ) + cell_ports.get((h[0], h[1] + 1), {}).get(layer, [])
-            hx, hy = h
-            ports_near: list[
-                tuple[int, int, int, int, _InstanceLike, _ResolvedPort]
-            ] = []
-            for x in (hx - 1, hx, hx + 1):
-                for y in (hy - 1, hy, hy + 1):
-                    ports_near.extend(inst_ports.get((x, y), {}).get(layer, []))
+            additional_cellports = tuple(_forward_neighbors(cell_ports, h, layer))
+            ports_near = tuple(_nearby(inst_ports, h, layer))
 
             for n, (_, cellport) in enumerate(cellports):
                 for _, cellport2 in chain(cellports[n + 1 :], additional_cellports):
@@ -262,9 +231,7 @@ def get_optical_nets(
 
     for h, inst_layer_dict in inst_ports.items():
         for layer, ports in inst_layer_dict.items():
-            additional_ports = inst_ports.get((h[0] + 1, h[1]), {}).get(
-                layer, []
-            ) + inst_ports.get((h[0], h[1] + 1), {}).get(layer, [])
+            additional_ports = tuple(_forward_neighbors(inst_ports, h, layer))
             for n, (_, _, ia, ib, inst, port) in enumerate(ports):
                 for _, _, ia2, ib2, inst2, port2 in chain(
                     ports[n + 1 :], additional_ports

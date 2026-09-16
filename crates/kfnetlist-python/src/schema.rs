@@ -1,6 +1,6 @@
-//! Python object conversion only; all schema operations live in kfnetlist-core.
+//! Python object conversion only; all schema operations live in kfnetlist-schema.
 use crate::{from_py_any, json_parse, json_string, to_py_dict};
-use kfnetlist_core::schema::{self as core, proto};
+use kfnetlist_schema::{self as core, proto};
 use prost::Message;
 use pyo3::prelude::*;
 use pyo3::types::{PyBytes, PyDict, PyList, PyTuple, PyType};
@@ -133,33 +133,27 @@ macro_rules! schema_class {
         }
     };
 }
-schema_class!(
+macro_rules! proto_schema_class {
+    ($name:ident, $core:ty, [$($field:ident),*], {$($extra:tt)*}) => {
+        schema_class!($name, $core, [$($field),*], {
+            fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
+                PyBytes::new(py, &self.0.encode_to_vec())
+            }
+            #[classmethod]
+            fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
+                <$core>::decode(data).map(Self).map_err(schema_error)
+            }
+            $($extra)*
+        });
+    };
+}
+proto_schema_class!(
     PrefixedValue,
     proto::PrefixedValue,
     [double_value, prefix],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::PrefixedValue>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(ParameterValue, proto::ParameterValue, [], {
-    fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-        PyBytes::new(py, &self.0.encode_to_vec())
-    }
-    #[classmethod]
-    fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-        <proto::ParameterValue>::decode(data)
-            .map(Self)
-            .map_err(schema_error)
-    }
-
+proto_schema_class!(ParameterValue, proto::ParameterValue, [], {
     #[getter]
     fn prefixed_value(&self) -> Option<PrefixedValue> {
         match &self.0.value {
@@ -175,55 +169,25 @@ schema_class!(ParameterValue, proto::ParameterValue, [], {
         }
     }
 });
-schema_class!(
+proto_schema_class!(
     Parameter,
     proto::Parameter,
     [uid, name, default_value, description, properties],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::Parameter>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     ModelInterface,
     proto::ModelInterface,
     [name, function_name, parameters, properties],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::ModelInterface>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     ModelReference,
     proto::ModelReference,
     [model_interface_name, arguments],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::ModelReference>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     Terminal,
     proto::Terminal,
     [
@@ -235,81 +199,33 @@ schema_class!(
         cross_section,
         properties
     ],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::Terminal>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     TerminalReference,
     proto::TerminalReference,
     [instance_name, terminal_name],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::TerminalReference>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     Connection,
     proto::Connection,
     [name, source, target, domain, weight, properties],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::Connection>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     Bus,
     proto::Bus,
     [name, width, domain, connections, properties],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::Bus>::decode(data).map(Self).map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     ExternalModule,
     proto::ExternalModule,
     [name, domain, terminals, parameters, properties],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::ExternalModule>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     ProtoModuleReference,
     proto::ModuleReference,
     [
@@ -320,19 +236,9 @@ schema_class!(
         parameter_overrides,
         properties
     ],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::ModuleReference>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     ProtoModule,
     proto::Module,
     [
@@ -347,33 +253,13 @@ schema_class!(
         buses,
         properties
     ],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::Module>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
-schema_class!(
+proto_schema_class!(
     ProtoCircuit,
     proto::Circuit,
     [name, domain, top_module, modules, ext_modules, properties],
-    {
-        fn to_proto<'py>(&self, py: Python<'py>) -> Bound<'py, PyBytes> {
-            PyBytes::new(py, &self.0.encode_to_vec())
-        }
-        #[classmethod]
-        fn from_proto(_cls: &Bound<'_, PyType>, data: &[u8]) -> PyResult<Self> {
-            <proto::Circuit>::decode(data)
-                .map(Self)
-                .map_err(schema_error)
-        }
-    }
+    {}
 );
 schema_class!(ArraySpec, core::ArraySpec, [na, nb], {});
 schema_class!(

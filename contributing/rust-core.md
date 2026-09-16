@@ -1,9 +1,10 @@
 # Rust core and Python bindings
 
-The repository is a Cargo workspace. `kfnetlist-core` depends on serde,
-serde_json, and indexmap. `kfnetlist-python` depends on the core, PyO3, and
-pythonize, and produces the existing `kfnetlist._native` extension. The default
-workspace member is the core: plain `cargo build` and `cargo test` do not build
+The repository is a Cargo workspace. `kfnetlist-core` depends only on serde,
+serde_json, and indexmap. `kfnetlist-schema` depends on the core and owns PIC
+documents, YAML, and protobuf. `kfnetlist-python` binds both crates with PyO3
+and produces the existing `kfnetlist._native` extension. The default workspace
+member is the core: plain `cargo build` and `cargo test` do not build schema or
 Python bindings.
 
 ## Native API
@@ -91,6 +92,7 @@ collapse to plain references; other reference indices have upper-bound checks.
 
 ```sh
 cargo test -p kfnetlist-core
+cargo test -p kfnetlist-schema
 cargo run -p kfnetlist-core --example connectivity
 cargo fmt --all --check
 cargo clippy --workspace --all-targets -- -D warnings
@@ -101,6 +103,6 @@ uv build
 The integration tests exercise the core as an ordinary Rust consumer. The
 Python suite checks the binding contract. CI runs both. Maturin reads
 `crates/kfnetlist-python/Cargo.toml` through `pyproject.toml`; wheels and source
-distributions include the workspace core dependency. Package versions are
+distributions include both workspace dependencies. Package versions are
 inherited from the root `[workspace.package]` version, which the existing tbump
 configuration updates together with the Python package version.

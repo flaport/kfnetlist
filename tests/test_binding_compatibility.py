@@ -148,7 +148,7 @@ def test_pydantic_accepts_instances_and_wire_values(value: object) -> None:
     pydantic = pytest.importorskip("pydantic")
     adapter = pydantic.TypeAdapter(type(value))
     assert adapter.validate_python(value) is value
-    wire = value.to_dict()  # type: ignore[attr-defined]
+    wire = value.to_dict()
     if isinstance(value, Net):
         # The existing generic schema accepts dicts and instances, not net lists.
         with pytest.raises(pydantic.ValidationError):
