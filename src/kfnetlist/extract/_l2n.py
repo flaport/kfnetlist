@@ -92,22 +92,26 @@ def l2n_elec(
                 kdb.Text(string=canonical, trans=port.trans)
             )
 
+    resolved_connectivity: list[list[tuple[kdb.LayerId, kdb.LayerInfo]]] = []
+    for layer_set in connectivity:
+        resolved_layer_set = []
+        for info in layer_set:
+            layer_id = ly_elec.layer(info)
+            resolved_layer_set.append((layer_id, ly_elec.get_info(layer_id)))
+        resolved_connectivity.append(resolved_layer_set)
     l2n = kdb.LayoutToNetlist.from_cell(ly_elec.cell(cell.name))
-
     layers: dict[int, kdb.Region] = {}
-    layer_infos = {
-        ly_elec.get_info(ly_elec.layer(info))
-        for layer_set in connectivity
-        for info in layer_set
-    }
-    for info in layer_infos:
-        l_ = l2n.make_layer(ly_elec.layer(info), info.name)
-        layers[ly_elec.layer(info)] = l_
-        l2n.connect(l_)
-    for conn in connectivity:
-        old_layer = layers[ly_elec.layer(conn[0])]
-        for layer in conn[1:]:
-            li = layers[ly_elec.layer(layer)]
+    for layer_set in resolved_connectivity:
+        for layer_id, info in layer_set:
+            if layer_id.index in layers:
+                continue
+            layer = l2n.make_layer(layer_id, info.name)
+            layers[layer_id.index] = layer
+            l2n.connect(layer)
+    for conn in resolved_connectivity:
+        old_layer = layers[conn[0][0].index]
+        for layer_id, _ in conn[1:]:
+            li = layers[layer_id.index]
             l2n.connect(old_layer, li)
             old_layer = li
     l2n.extract_netlist()
