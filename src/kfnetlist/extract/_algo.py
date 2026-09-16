@@ -275,7 +275,7 @@ def _build_cell_netlist(
                 recit.max_depth = 0
                 recit.targets = [
                     cell.kcl[
-                        l2n_elec_obj.internal_layout().cell(circ_ref.cell_index).name
+                        l2n_elec_obj.internal_layout().cell_name(circ_ref.cell_index)
                     ].cell_index()
                 ]
                 recit.overlapping = True
