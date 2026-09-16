@@ -243,6 +243,10 @@ def gen_api_reference(out_root: Path, src_pkg: Path) -> list[Path]:
         kfnetlist/port_check.py        → reference/port_check.md
         kfnetlist/extract/__init__.py  → reference/extract/index.md
     """
+    reference_root = out_root / "reference"
+    if reference_root.exists():
+        shutil.rmtree(reference_root)
+
     written: list[Path] = []
     api_tree: list[tuple[int, str, str]] = []
 
@@ -263,7 +267,7 @@ def gen_api_reference(out_root: Path, src_pkg: Path) -> list[Path]:
         else:
             sub_parts = parts[1:]
             doc_rel = Path(*sub_parts).with_suffix(".md")
-        target = out_root / "reference" / doc_rel
+        target = reference_root / doc_rel
         target.parent.mkdir(parents=True, exist_ok=True)
         ident = ".".join(parts)
         if is_package:
