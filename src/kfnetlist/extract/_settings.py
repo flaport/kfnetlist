@@ -39,7 +39,6 @@ def _is_serializable_shape(value: Any) -> TypeGuard[Any]:
         | kdb.Region
         | kdb.Text
         | kdb.DText
-        | kdb.Texts
         | kdb.Trans
         | kdb.DTrans
         | kdb.CplxTrans
