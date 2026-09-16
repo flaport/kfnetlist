@@ -23,7 +23,7 @@ from ._settings import serialize_setting
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable, Mapping, Sequence
 
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
 
 class _FactoryLike(Protocol):
@@ -241,7 +241,7 @@ def _build_cell_netlist(
     exclude_purposes: list[str] | None = None,
 ) -> Netlist:
     """Lifted ``kfactory.kcell._get_netlist``."""
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
     elec_circ = l2n_elec_obj.netlist().circuit_by_name(cell.name)
     nl = Netlist()

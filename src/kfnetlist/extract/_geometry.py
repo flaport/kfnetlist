@@ -17,7 +17,7 @@ from kfnetlist.port_check import (
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
 
 class _BaseLike(Protocol):
@@ -114,7 +114,7 @@ def _layer_key(port: _ResolvedPort) -> str:
 
 def _snapped_disp(base: _BaseLike) -> tuple[int, int]:
     """Resolve to an integer transform, snap angle mod 2, return (x, y)."""
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
     if base.trans is not None:
         t = base.trans
@@ -150,7 +150,7 @@ def get_optical_nets(
     pairings use ``opposite``. The bitmask source of truth is
     :class:`kfnetlist.port_check.PortCheck`.
     """
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
     cell_ports: dict[tuple[int, int], dict[str, list[tuple[int, _ResolvedPort]]]] = {}
     inst_ports: dict[

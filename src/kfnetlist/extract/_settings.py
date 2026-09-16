@@ -13,7 +13,7 @@ if TYPE_CHECKING:
 
 
 def _is_serializable_shape(value: Any) -> TypeGuard[Any]:
-    from klayout import db as kdb, lay
+    from rlayout import db as kdb, lay
 
     return isinstance(
         value,

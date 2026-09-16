@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Protocol
 if TYPE_CHECKING:
     from collections.abc import Iterable, Mapping, Sequence
 
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
 
 class _PortLike(Protocol):
@@ -56,7 +56,7 @@ def l2n_elec(
     :class:`kdb.Text` marker on its layer in a fresh layout copy, then klayout
     runs its own connectivity extraction across ``connectivity``.
     """
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
     connectivity = connectivity or cell.kcl.connectivity
     ly_elec = cell.kcl.layout.dup()
@@ -92,9 +92,7 @@ def l2n_elec(
                 kdb.Text(string=canonical, trans=port.trans)
             )
 
-    l2n: kdb.LayoutToNetlist = kdb.LayoutToNetlist(
-        kdb.RecursiveShapeIterator(ly_elec, ly_elec.cell(cell.name), [])
-    )
+    l2n = kdb.LayoutToNetlist.from_cell(ly_elec.cell(cell.name))
 
     layers: dict[int, kdb.Region] = {}
     layer_infos = {

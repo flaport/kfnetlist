@@ -6,7 +6,7 @@ from enum import IntFlag, auto
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
 
 class PortCheck(IntFlag):
@@ -54,7 +54,7 @@ class PortLike(Protocol):
 
 
 def _get_trans(port: PortLike) -> kdb.Trans:
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
     if port.trans is not None:
         return port.trans
@@ -63,7 +63,7 @@ def _get_trans(port: PortLike) -> kdb.Trans:
 
 
 def _get_dcplx_trans(port: PortLike) -> kdb.DCplxTrans:
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
     if port.dcplx_trans is not None:
         return port.dcplx_trans

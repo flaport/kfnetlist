@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
 
 def _layer_display_name(info: kdb.LayerInfo) -> str:
