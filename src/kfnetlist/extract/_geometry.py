@@ -121,9 +121,7 @@ def _snapped_disp(base: _BaseLike) -> tuple[int, int]:
     else:
         assert base.dcplx_trans is not None, "port has neither trans nor dcplx_trans"
         t = kdb.ICplxTrans(trans=base.dcplx_trans, dbu=base.kcl.dbu).s_trans()
-    t = t.dup()
-    t.angle %= 2
-    t.mirror = False
+    t = kdb.Trans(t.angle % 2, False, t.disp)
     v = t.disp
     return (v.x, v.y)
 
