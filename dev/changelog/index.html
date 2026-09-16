@@ -1354,33 +1354,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../reference/kfnetlist_schema/circuit_pb2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  circuit_pb2
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../reference/kfnetlist_schema/models/" class="md-nav__link">
         
   
@@ -1677,6 +1650,14 @@
 <h1 id="changelog">Changelog</h1>
 <h2 id="unreleased">Unreleased</h2>
 <ul>
+<li><strong>Zero Python runtime dependencies</strong> — protobuf and YAML parsing now run
+  entirely in the native extension. The duplicate Python schema converters and
+  generated protobuf module were removed. Pydantic interoperability remains
+  available when applications install Pydantic separately.</li>
+<li><strong>Pure connectivity core</strong> — PIC documents, YAML, and protobuf moved from
+  <code>kfnetlist-core</code> into the new <code>kfnetlist-schema</code> crate.</li>
+<li><strong>Instance removal</strong> no longer creates empty nets when an absent or isolated
+  instance is removed.</li>
 <li><strong>Instance metadata</strong> — <code>NetlistInstance.info</code> and <code>PlacedInstance.info</code>
   carry JSON-compatible dictionaries, accepted through keyword-only <code>info=</code>
   constructor and <code>create_inst()</code> arguments. Extraction copies named kfactory

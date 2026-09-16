@@ -1545,33 +1545,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../reference/kfnetlist_schema/circuit_pb2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  circuit_pb2
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../reference/kfnetlist_schema/models/" class="md-nav__link">
         
   
@@ -2058,8 +2031,8 @@ instances, nets, and ports.</p>
   serialized order is always deterministic after <code>sort()</code>.</li>
 </ul>
 <h2 id="pydantic-integration">Pydantic integration</h2>
-<p>All kfnetlist types implement <code>__get_pydantic_core_schema__</code>, so they can be
-used directly as fields in Pydantic v2 models without custom validators.</p>
+<p>When Pydantic is installed separately, all kfnetlist types can be used
+directly as Pydantic v2 fields without custom validators.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">pydantic</span><span class="w"> </span><span class="kn">import</span> <span class="n">BaseModel</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">kfnetlist</span><span class="w"> </span><span class="kn">import</span> <span class="n">Netlist</span>
 

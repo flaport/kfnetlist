@@ -1416,33 +1416,6 @@
   
   
     <li class="md-nav__item">
-      <a href="./reference/kfnetlist_schema/circuit_pb2/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  circuit_pb2
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="./reference/kfnetlist_schema/models/" class="md-nav__link">
         
   
@@ -1625,7 +1598,7 @@
 
 <h1 id="kfnetlist">kfnetlist</h1>
 <p><strong>kfnetlist</strong> is a standalone, Rust-backed netlist schema for <a href="https://github.com/gdsfactory/kfactory">kfactory</a> and netlist tooling.</p>
-<p>It provides a fast, type-safe data model for circuit connectivity — instances, nets, ports, and arrays — with full JSON/dict serialization and Pydantic v2 integration. The core is implemented in Rust via PyO3 and has zero runtime Python dependencies.</p>
+<p>It provides a fast, type-safe data model for circuit connectivity — instances, nets, ports, and arrays — with full JSON/dict serialization and optional Pydantic v2 integration. The core is implemented in Rust via PyO3 and has zero runtime Python dependencies.</p>
 <hr />
 <div class="grid cards">
 <ul>
@@ -1677,7 +1650,8 @@
 <li><strong>Rust core</strong> — <code>Netlist</code>, <code>Net</code>, and port types implemented in Rust for speed and memory safety</li>
 <li><strong>Zero runtime dependencies</strong> — the base package has no Python dependencies</li>
 <li><strong>Full serialization</strong> — <code>to_json()</code> / <code>from_json()</code> and <code>to_dict()</code> / <code>from_dict()</code> on every type</li>
-<li><strong>Pydantic v2 support</strong> — all types implement <code>__get_pydantic_core_schema__</code></li>
+<li><strong>Optional Pydantic v2 support</strong> — install Pydantic separately; all types
+  implement <code>__get_pydantic_core_schema__</code></li>
 <li><strong>Equivalent ports</strong> — fold electrically-equivalent ports into canonical names for netlist comparison</li>
 <li><strong>Hierarchical flattening</strong> — replace instances by the contents of their own cell's netlist, rewiring nets across the two levels</li>
 <li><strong>Instance removal</strong> — delete sub-cell instances, merging the nets they touched</li>
