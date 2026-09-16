@@ -19,8 +19,8 @@ jobs:
           components: rustfmt, clippy
       - name: Check Rust formatting
         run: cargo fmt --all --check
-      - name: Test the standalone Rust core
-        run: cargo test -p kfnetlist-core
+      - name: Test the Rust workspace
+        run: cargo test --workspace
       - name: Lint Rust crates
         run: cargo clippy --workspace --all-targets -- -D warnings
 

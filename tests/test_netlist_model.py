@@ -228,6 +228,17 @@ def test_netlist_remove_instances() -> None:
     assert flat_refs == []
 
 
+def test_remove_instances_does_not_create_empty_nets() -> None:
+    nl = Netlist()
+    nl.remove_instances(["absent"])
+    assert nl.nets == []
+
+    nl.create_inst("isolated", kcl="p", component="c")
+    nl.create_net(PortRef(instance="isolated", port="o1"))
+    nl.remove_instances(["isolated"])
+    assert nl.nets == []
+
+
 def test_flatten_instances_is_a_deprecated_alias() -> None:
     nl = _netlist_with_removable_instance()
     with pytest.deprecated_call():

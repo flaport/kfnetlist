@@ -47,8 +47,8 @@ assert nl_a.to_dict() == nl_b.to_dict()
 
 ### Can I use kfnetlist types in Pydantic models?
 
-Yes. All types implement `__get_pydantic_core_schema__` and work directly as
-Pydantic v2 model fields.
+Yes. Install Pydantic separately; all types implement
+`__get_pydantic_core_schema__` and work directly as Pydantic v2 model fields.
 
 ## Extraction
 

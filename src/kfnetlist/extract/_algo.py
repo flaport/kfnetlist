@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 from kfnetlist import (
     Net,
@@ -16,103 +16,20 @@ from kfnetlist import (
     flatten_netlists,
 )
 
-from ._geometry import _BaseLike, _CrossSectionWrapperLike, get_optical_nets
+from ._geometry import get_optical_nets
 from ._l2n import l2n_elec as _l2n_elec
+from ._protocols import (
+    CellLike as _CellLike,
+    InstanceLike as _InstanceLike,
+    PlaceableLike as _PlaceableLike,
+    RootCellLike as _RootCellLike,
+)
 from ._settings import serialize_setting
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Mapping, Sequence
+    from collections.abc import Callable, Iterable, Sequence
 
     from klayout import db as kdb
-
-
-class _FactoryLike(Protocol):
-    lvs_equivalent_ports: list[list[str]] | None
-
-
-class _SettingsLike(Protocol):
-    def model_dump(self) -> dict[str, object]: ...
-
-
-class _LibraryLike(Protocol):
-    def name(self) -> str: ...
-
-
-class _PortLike(Protocol):
-    name: str
-    port_type: str
-    trans: kdb.Trans
-
-    @property
-    def layer_info(self) -> kdb.LayerInfo: ...
-    @property
-    def base(self) -> _BaseLike: ...
-    @property
-    def cross_section(self) -> _CrossSectionWrapperLike: ...
-
-
-class _CellLike(Protocol):
-    name: str
-
-    # Declared as read-only properties (rather than class attributes) so that
-    # implementations are free to expose narrower concrete types: protocol
-    # attributes are invariant, properties are covariant on read.
-    @property
-    def virtual(self) -> bool: ...
-    @property
-    def lvs_equivalent_ports(self) -> list[list[str]] | None: ...
-    @property
-    def factory_name(self) -> str: ...
-    @property
-    def settings(self) -> _SettingsLike: ...
-    @property
-    def library_cell(self) -> _CellLike: ...
-    @property
-    def kcl(self) -> _KCLLike: ...
-    @property
-    def ports(self) -> Iterable[_PortLike]: ...
-    @property
-    def insts(self) -> Iterable[_InstanceLike]: ...
-    def has_factory_name(self) -> bool: ...
-    def is_library_cell(self) -> bool: ...
-    def library(self) -> _LibraryLike: ...
-    def cell_index(self) -> int: ...
-
-
-class _InstanceLike(Protocol):
-    name: str
-    na: int
-    nb: int
-    dcplx_trans: kdb.DCplxTrans
-    purpose: str | None
-
-    # Read-only for the same covariance reason as `_CellLike.settings`.
-    @property
-    def instance(self) -> kdb.Instance: ...
-    @property
-    def cell(self) -> _CellLike: ...
-    @property
-    def ports(self) -> Iterable[_PortLike]: ...
-    def is_named(self) -> bool: ...
-
-
-class _KCLLike(Protocol):
-    name: str
-    layout: kdb.Layout
-
-    @property
-    def dbu(self) -> float: ...
-    @property
-    def connectivity(self) -> Sequence[Sequence[kdb.LayerInfo]]: ...
-    @property
-    def factories(self) -> Mapping[str, _FactoryLike]: ...
-    @property
-    def virtual_factories(self) -> Mapping[str, _FactoryLike]: ...
-    def __getitem__(self, key: int | str, /) -> _CellLike: ...
-
-
-class _RootCellLike(_CellLike, Protocol):
-    def called_cells(self) -> Iterable[int]: ...
 
 
 def _orig_cell(c: _CellLike) -> _CellLike:
@@ -151,38 +68,16 @@ def _gather_equivalent_ports(
     return eqps_all
 
 
-class _DBoxLike(Protocol):
-    left: float
-    bottom: float
-    right: float
-    top: float
-
-
-class _DVectorLike(Protocol):
-    x: float
-    y: float
-
-
-class _DCplxTransLike(Protocol):
-    angle: float
-    mirror: bool
-
-    @property
-    def disp(self) -> _DVectorLike: ...
-
-
-class _InstanceShapeLike(Protocol):
-    def dbbox(self) -> _DBoxLike: ...
-
-
-class _PlaceableLike(Protocol):
-    # Only the geometry surface `_placement_for` reads, described structurally
-    # like the other `*Like` protocols so the helper never depends on concrete
-    # klayout classes (and can be exercised with plain stand-ins in tests).
-    @property
-    def instance(self) -> _InstanceShapeLike: ...
-    @property
-    def dcplx_trans(self) -> _DCplxTransLike: ...
+def _build_port_mapping(
+    equivalent_ports: dict[str, list[list[str]]],
+) -> dict[str, dict[str, str]]:
+    """Map every equivalent port to the first port in its group."""
+    mapping: dict[str, dict[str, str]] = defaultdict(dict)
+    for cell_name, groups in equivalent_ports.items():
+        for group in groups:
+            if group:
+                mapping[cell_name].update(dict.fromkeys(group, group[0]))
+    return mapping
 
 
 def _placement_for(inst: _PlaceableLike) -> Placement:
@@ -312,8 +207,6 @@ def _build_cell_netlist(
             inst.name for inst in cell.insts if inst.purpose in exclude_purposes
         }
     nl.remove_instances(list(inst_names))
-    for inst_name in inst_names:
-        nl.instances.pop(inst_name, None)
     nl.sort()
     return nl
 
@@ -364,13 +257,7 @@ def extract(
     if equivalent_ports is None:
         equivalent_ports = _gather_equivalent_ports(cell)
 
-    port_mapping: dict[str, dict[str, str]] = defaultdict(dict)
-    for cell_name, list_of_port_lists in equivalent_ports.items():
-        for port_list in list_of_port_lists:
-            if port_list:
-                p1 = port_list[0]
-                for port_name in port_list:
-                    port_mapping[cell_name][port_name] = p1
+    port_mapping = _build_port_mapping(equivalent_ports)
 
     l2n = _l2n_elec(
         cell,
@@ -384,15 +271,6 @@ def extract(
     # carry the factory name, so this is what lets `flatten()` find the netlist
     # belonging to an instance regardless of the flavor.
     instance_cell_maps: dict[str, dict[str, str]] = {}
-
-    # NOTE: this pass mirrors a redundant remap loop in the original
-    # ProtoTKCell.netlist body; preserved for behavioural parity.
-    for cell_name, eqps in equivalent_ports.items():
-        for eqp_list in eqps:
-            if eqp_list:
-                p1 = eqp_list[0]
-                for p in eqp_list:
-                    port_mapping[cell_name][p] = p1
 
     for ci in [cell.cell_index(), *cell.called_cells()]:
         c_ = cell.kcl[ci]

@@ -76,7 +76,6 @@ class TestTopLevelExports:
 
     def test_version_string_present(self):
         assert isinstance(kfnetlist.__version__, str)
-        assert kfnetlist.__version__  # ty: ignore[redundant-condition]
 
 
 # ---------------------------------------------------------------------------

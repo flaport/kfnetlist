@@ -228,7 +228,9 @@ impl Netlist {
     /// hierarchical flattening API in [`crate::flatten`].
     pub fn remove_instances(&mut self, names: Vec<String>) -> Result<()> {
         for inst_name in names {
-            self.instances.shift_remove(&inst_name);
+            if self.instances.shift_remove(&inst_name).is_none() {
+                continue;
+            }
             let mut surviving: Vec<Net> = Vec::with_capacity(self.nets.len());
             let mut merged: Vec<NetMember> = Vec::new();
             for net in self.nets.drain(..) {
@@ -253,7 +255,9 @@ impl Netlist {
                 }
             }
             self.nets = surviving;
-            self.nets.push(Net::from_members(merged));
+            if !merged.is_empty() {
+                self.nets.push(Net::from_members(merged));
+            }
         }
         Ok(())
     }

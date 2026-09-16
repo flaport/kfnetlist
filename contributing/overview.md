@@ -4,7 +4,11 @@
 
 kfnetlist is a standalone, high-performance netlist schema for circuit connectivity manipulation. It provides a decoupled, lightweight data model for representing and manipulating circuit netlists without requiring the full [kfactory](https://github.com/gdsfactory/kfactory)/klayout stack.
 
-The core data types and algorithms live in the Python-independent **Rust** crate `kfnetlist-core`. The separate `kfnetlist-python` crate exposes the Python API via PyO3. Extraction logic and port checking remain in Python for interoperability with klayout.
+The connectivity types and algorithms live in the Python-independent Rust crate
+`kfnetlist-core`. PIC documents, YAML, and protobuf live in `kfnetlist-schema`,
+which depends on the core. The separate `kfnetlist-python` crate exposes both
+through PyO3. Extraction logic and port checking remain in Python for
+interoperability with klayout.
 
 ## Key Features
 
@@ -16,7 +20,8 @@ The core data types and algorithms live in the Python-independent **Rust** crate
 - **Instance removal**: delete intermediate instances and re-merge their nets
 - **Port connection checking**: bitmask-based pairwise port comparison (direction, width, layer, position)
 - **Layout extraction** (optional, requires klayout): extract optical and electrical netlists from layout cells
-- **Pydantic v2 compatibility**: all types implement `__get_pydantic_core_schema__` for seamless validation
+- **Optional Pydantic v2 compatibility**: all types implement
+  `__get_pydantic_core_schema__`; applications install Pydantic separately
 
 ## Architecture
 
@@ -49,7 +54,8 @@ The core data types and algorithms live in the Python-independent **Rust** crate
 | Crate | Responsibility |
 |-------|----------------|
 | `crates/kfnetlist-core` | Native connectivity and placement values, serde wire formats, validation, normalization, hierarchical flattening, instance removal, open detection, and net differences |
-| `crates/kfnetlist-python` | PyO3 classes and inheritance, mutable Python properties, collection snapshots, iterators, repr/comparison, Pydantic integration, and exception conversion |
+| `crates/kfnetlist-schema` | PIC documents, YAML parsing, protobuf generation and conversion; depends on `kfnetlist-core` |
+| `crates/kfnetlist-python` | PyO3 classes and inheritance, collection snapshots, iterators, repr/comparison, optional Pydantic integration, and exception conversion |
 
 Both crates have `port`, `net`, `instance`, `netlist`, and `placement` modules.
 Core values contain no Python objects; binding classes own core values. The
@@ -66,6 +72,7 @@ binding crate's `lib.rs` registers the `kfnetlist._native` module. See
 | `port_check.py` | `PortCheck` bitmask enum and `check_connection()` function | klayout (lazy import) |
 | `extract/__init__.py` | Re-exports extraction functions | klayout |
 | `extract/_algo.py` | Main extraction orchestrator (`extract()`) | `_geometry`, `_l2n`, `_settings`, kfnetlist core |
+| `extract/_protocols.py` | Structural types for kfactory/klayout adapters | klayout (type checking only) |
 | `extract/_geometry.py` | Optical net extraction from port adjacency (`get_optical_nets()`) | `port_check`, klayout |
 | `extract/_l2n.py` | Electrical layout-to-netlist via klayout L2N (`l2n_elec()`) | klayout |
 | `extract/_settings.py` | Serialize klayout shapes to JSON-safe strings (`serialize_setting()`) | klayout |

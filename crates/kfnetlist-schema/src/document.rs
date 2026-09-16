@@ -1,6 +1,6 @@
 use super::{error, Error, Result};
-use crate::{NetMember, Netlist, NetlistPort, PortArrayRef, PortRef};
 use indexmap::IndexMap;
+use kfnetlist_core::{NetMember, Netlist, NetlistPort, PortArrayRef, PortRef};
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 

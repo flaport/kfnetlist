@@ -7,7 +7,7 @@ Tests for kfnetlist.kfnetlist_schema:
   - Reverse elaboration: Netlist → TopLevelModule
   - Full structural round-trip
   - Type alias identity
-  - Proto round-trip (ProtoCircuit ↔ circuit_pb2.Circuit)
+  - Protobuf byte round-trips through the Rust schema crate
   - Protobuf byte round-trips through Rust-backed types
 """
 
@@ -32,11 +32,6 @@ from kfnetlist.kfnetlist_schema import (
     TopLevelModule,
     InstanceRef,
     load_pic_yaml,
-    netlist_to_module,
-    netlists_to_top_level_module,
-    proto_circuit_to_top_level_module,
-    top_level_module_to_netlists,
-    top_level_module_to_proto_circuit,
 )
 
 SCHEMA_YAML = (
@@ -210,7 +205,7 @@ class TestSchemaPicYaml:
 class TestForwardElaboration:
     def test_simple_instances(self):
         doc = _simple_doc()
-        netlists = top_level_module_to_netlists(doc)
+        netlists = doc.to_netlists()
         assert "buf" in netlists
         nl = netlists["buf"]
         assert nl.has_instance("mzi")
@@ -219,13 +214,13 @@ class TestForwardElaboration:
 
     def test_instance_settings(self):
         doc = _simple_doc()
-        nl = top_level_module_to_netlists(doc)["buf"]
+        nl = doc.to_netlists()["buf"]
         inst = nl.get_instance("mzi")
         assert inst.settings.get("delta_length") == 3
 
     def test_ports_become_nets(self):
         doc = _simple_doc()
-        nl = top_level_module_to_netlists(doc)["buf"]
+        nl = doc.to_netlists()["buf"]
         # Each port exposure creates a net: NetlistPort("o1") ↔ PortRef("mzi","o1")
         port_names = {p.name for p in nl.ports}
         assert "o1" in port_names
@@ -244,7 +239,7 @@ class TestForwardElaboration:
             },
             toplevel="top",
         )
-        nl = top_level_module_to_netlists(doc)["top"]
+        nl = doc.to_netlists()["top"]
         assert nl.nets is not None
 
     def test_array_instance(self):
@@ -258,14 +253,14 @@ class TestForwardElaboration:
             },
             toplevel="top",
         )
-        nl = top_level_module_to_netlists(doc)["top"]
+        nl = doc.to_netlists()["top"]
         inst = nl.get_instance("arr")
         assert inst.array is not None
         assert inst.array.na == 3
 
     def test_schema_pic_yaml(self):
         doc = load_pic_yaml(SCHEMA_YAML)
-        netlists = top_level_module_to_netlists(doc)
+        netlists = doc.to_netlists()
         assert "my_component" in netlists
         assert "my_second_component" in netlists
         nl_parent = netlists["my_second_component"]
@@ -290,7 +285,7 @@ class TestReverseElaboration:
 
     def test_round_trip_single(self):
         nl = self._make_nl()
-        doc = netlists_to_top_level_module({"buf": nl}, toplevel="buf")
+        doc = TopLevelModule.from_netlists({"buf": nl}, toplevel="buf")
         assert doc.toplevel == "buf"
         assert "buf" in doc.modules
         mod = doc.modules["buf"]
@@ -299,20 +294,20 @@ class TestReverseElaboration:
 
     def test_ports_recovered(self):
         nl = self._make_nl()
-        mod = netlist_to_module("buf", nl)
+        mod = Module.from_netlist("buf", nl)
         assert "o1" in mod.ports
         assert mod.ports["o1"] == "mzi,o1"
 
     def test_settings_preserved(self):
         nl = self._make_nl()
-        mod = netlist_to_module("buf", nl)
+        mod = Module.from_netlist("buf", nl)
         assert mod.instances["mzi"].settings.get("delta_length") == 3
 
     def test_multi_module(self):
         nl1, nl2 = Netlist(), Netlist()
         nl1.create_inst("sub_a", kcl="", component="comp_a")
         nl2.create_inst("sub_b", kcl="", component="comp_b")
-        doc = netlists_to_top_level_module(
+        doc = TopLevelModule.from_netlists(
             {"mod_a": nl1, "mod_b": nl2}, toplevel="mod_b"
         )
         assert set(doc.modules) == {"mod_a", "mod_b"}
@@ -327,8 +322,8 @@ class TestReverseElaboration:
 class TestFullRoundTrip:
     def test_doc_to_netlists_and_back(self):
         original = _multi_module_doc()
-        netlists = top_level_module_to_netlists(original)
-        recovered = netlists_to_top_level_module(netlists, toplevel=original.toplevel)
+        netlists = original.to_netlists()
+        recovered = TopLevelModule.from_netlists(netlists, toplevel=original.toplevel)
         for mod_name, orig_mod in original.modules.items():
             assert mod_name in recovered.modules
             rec_mod = recovered.modules[mod_name]
@@ -341,8 +336,8 @@ class TestFullRoundTrip:
 
     def test_schema_pic_yaml_full_round_trip(self):
         doc = load_pic_yaml(SCHEMA_YAML)
-        netlists = top_level_module_to_netlists(doc)
-        recovered = netlists_to_top_level_module(netlists, toplevel=doc.toplevel)
+        netlists = doc.to_netlists()
+        recovered = TopLevelModule.from_netlists(netlists, toplevel=doc.toplevel)
         assert recovered.toplevel == doc.toplevel
         for mod_name in doc.modules:
             assert mod_name in recovered.modules
@@ -396,7 +391,7 @@ class TestProtoRoundTrip:
 
     def test_top_level_module_to_proto_circuit(self):
         doc = _simple_doc()
-        circuit = top_level_module_to_proto_circuit(doc)
+        circuit = doc.to_proto_circuit()
         assert circuit.top_module == "buf"
         assert len(circuit.modules) == 1
         assert circuit.modules[0].name == "buf"
@@ -408,8 +403,8 @@ class TestProtoRoundTrip:
 
     def test_proto_circuit_to_top_level_module(self):
         doc = _simple_doc()
-        circuit = top_level_module_to_proto_circuit(doc)
-        recovered = proto_circuit_to_top_level_module(circuit)
+        circuit = doc.to_proto_circuit()
+        recovered = TopLevelModule.from_proto_circuit(circuit)
         assert recovered.toplevel == doc.toplevel
         assert "buf" in recovered.modules
         assert "mzi" in recovered.modules["buf"].instances
@@ -430,8 +425,8 @@ class TestProtoRoundTrip:
             },
             toplevel="m",
         )
-        circuit = top_level_module_to_proto_circuit(doc)
-        recovered = proto_circuit_to_top_level_module(circuit)
+        circuit = doc.to_proto_circuit()
+        recovered = TopLevelModule.from_proto_circuit(circuit)
         inst = recovered.modules["m"].instances["inst"]
         assert inst.settings.get("width") == 4.5
         assert inst.settings.get("n") == 2
@@ -447,8 +442,8 @@ class TestProtoRoundTrip:
             },
             toplevel="m",
         )
-        circuit = top_level_module_to_proto_circuit(doc)
-        recovered = proto_circuit_to_top_level_module(circuit)
+        circuit = doc.to_proto_circuit()
+        recovered = TopLevelModule.from_proto_circuit(circuit)
         arr = recovered.modules["m"].instances["arr"].array
         assert arr is not None
         assert arr.na == 5
@@ -477,7 +472,7 @@ class TestBareModuleBackwardCompat:
             "ports": {"p": "inst,port"},
         }
         doc = TopLevelModule.model_validate(raw)
-        nl = top_level_module_to_netlists(doc)["__root__"]
+        nl = doc.to_netlists()["__root__"]
         assert nl.has_instance("inst")
 
     def test_explicit_modules_not_promoted(self):

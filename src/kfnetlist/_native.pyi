@@ -225,7 +225,7 @@ class Netlist:
 
 class PlacedNetlist(Netlist):
     @property
-    def instances(self) -> dict[str, PlacedInstance]: ...  # type: ignore[override]
+    def instances(self) -> dict[str, PlacedInstance]: ...
     @property
     def placements(self) -> dict[str, Placement]: ...
     def __init__(self) -> None: ...
@@ -236,7 +236,7 @@ class PlacedNetlist(Netlist):
         placements: Mapping[str, Placement] | None = ...,
         cells: Mapping[str, str] | None = ...,
     ) -> Self: ...
-    def create_inst(  # type: ignore[override]
+    def create_inst(
         self,
         name: str,
         kcl: str,

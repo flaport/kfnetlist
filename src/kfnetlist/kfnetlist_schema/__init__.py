@@ -1,3 +1,5 @@
+from kfnetlist._native import load_pic_yaml
+
 from .models import (
     # Enums
     TerminalDirection,
@@ -33,15 +35,6 @@ from .models import (
     PortArrayRef,
     ModuleNetlist,
     InstanceRef,
-)
-from ._convert import (
-    top_level_module_to_netlists,
-    netlists_to_top_level_module,
-    module_to_netlist,
-    netlist_to_module,
-    top_level_module_to_proto_circuit,
-    proto_circuit_to_top_level_module,
-    load_pic_yaml,
 )
 
 __all__ = [
@@ -79,12 +72,6 @@ __all__ = [
     "PortArrayRef",
     "ModuleNetlist",
     "InstanceRef",
-    # Conversion helpers
-    "top_level_module_to_netlists",
-    "netlists_to_top_level_module",
-    "module_to_netlist",
-    "netlist_to_module",
-    "top_level_module_to_proto_circuit",
-    "proto_circuit_to_top_level_module",
+    # Loader
     "load_pic_yaml",
 ]

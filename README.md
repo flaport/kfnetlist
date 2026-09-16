@@ -4,9 +4,9 @@
 [kfactory](https://github.com/gdsfactory/kfactory) and netlist tooling.
 
 It provides a fast, type-safe data model for circuit connectivity — instances,
-nets, ports, and arrays — with full JSON/dict serialization and Pydantic v2
-integration. A Python-independent Rust crate owns the core types and algorithms;
-a separate PyO3 crate exposes them as native Python classes.
+nets, ports, and arrays — with full JSON/dict serialization and optional
+Pydantic v2 integration. Python-independent Rust crates own the connectivity and
+schema implementations; a separate PyO3 crate exposes them as native classes.
 
 ---
 
@@ -91,7 +91,8 @@ For a complete walkthrough, see the
 - **Zero runtime dependencies** — the base package has no Python dependencies
 - **Full serialization** — `to_json()` / `from_json()` and `to_dict()` /
   `from_dict()` on every type
-- **Pydantic v2 support** — all types implement `__get_pydantic_core_schema__`
+- **Optional Pydantic v2 support** — all types implement
+  `__get_pydantic_core_schema__`; install Pydantic separately to use it
 - **Equivalent ports** — `Netlist.normalize()` folds electrically-equivalent
   ports into canonical names for netlist comparison
 - **Hierarchical flattening** — `Netlist.flatten()` replaces instances by the
@@ -108,9 +109,10 @@ For a complete walkthrough, see the
 
 ## Rust usage
 
-The Cargo workspace contains `crates/kfnetlist-core` (the Rust library) and
+The Cargo workspace contains `crates/kfnetlist-core` (connectivity),
+`crates/kfnetlist-schema` (PIC documents, YAML, and protobuf), and
 `crates/kfnetlist-python` (the `kfnetlist._native` extension). Rust consumers can
-depend on the core directly, with no Python installation or PyO3 dependency:
+depend on the core directly, with no schema, Python, or PyO3 dependency:
 
 ```toml
 [dependencies]
@@ -135,13 +137,13 @@ let serialized = kfnetlist_core::to_json(&nl)?;
 ```
 
 Run the complete example with `cargo run -p kfnetlist-core --example connectivity`.
-Run Rust tests with `cargo test -p kfnetlist-core`, and Python compatibility tests
+Run Rust tests with `cargo test --workspace`, and Python compatibility tests
 with `uv run --extra dev --with pydantic pytest`. Maturin uses the binding manifest configured in
 `pyproject.toml`, so source and wheel builds still run from the repository root.
 See [the Rust API guide](contributing/rust-core.md) for ownership, serialization,
 and compatibility details.
 
-The hierarchical PIC document and protobuf types also live in the Rust core.
+The hierarchical PIC document and protobuf types live in `kfnetlist-schema`.
 Python exposes them through `kfnetlist.kfnetlist_schema`; protobuf methods exchange
 bytes, and YAML parsing runs in Rust. See [the circuit schema guide](contributing/circuit-schema.md)
 for examples and migration notes.
@@ -152,7 +154,7 @@ for examples and migration notes.
 kfnetlist
 ├── _native          # Rust extension (PyO3): Netlist, Net, NetlistPort,
 │                    #   PortRef, PortArrayRef, NetlistInstance, NetlistArray
-├── kfnetlist_schema  # Native circuit/PIC types and conversion aliases
+├── kfnetlist_schema  # Native circuit/PIC types and YAML loader
 ├── port_check       # PortCheck bitmask + check_connection()
 └── extract          # Netlist extraction from layout cells (requires klayout)
     ├── _algo        #   Main extraction orchestrator
