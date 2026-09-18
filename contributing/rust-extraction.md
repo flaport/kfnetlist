@@ -138,3 +138,25 @@ Stage 2 implementation awaits post-push validation.
 The private RLayout source pin uses SSH, matching the parent checkout. Cargo
 fetches may need `CARGO_NET_GIT_FETCH_WITH_CLI=true` with the user's existing
 Git credentials. The parent already configures that setting.
+
+### Stage 2 validated, 2026-09-18
+
+Runtime KFNetlist `62d30bc`, parent implementation `bab93d5`.
+The parent Rust workspace passes 159 tests; core/extraction crates pass 11 + 2.
+The standalone example runs with `PYO3_NO_PYTHON=1`. `readelf`, `ldd`, and
+`nm -D` show neither Python runtime dependencies nor Python API symbols.
+Parent check/format, native static executable/cdylib tests and ASan/UBSan/LSan
+checks pass. Maturin rebuilds the shared extension and upgrades model bindings.
+
+Parent Python: 179 passed. Guarded KFNetlist suite plus bridge tests: 487 passed,
+including 269 differential cases / 279 observations / zero differences.
+Bridge tests exercise a real KFactory layout, source write rejection, retained
+native results, and foreign/deleted handle rejection. The model-only extension
+continues to import independently; clean wheel packaging is the Stage 4 gate.
+
+Reproduce from the parent with `cargo check --workspace`,
+`cargo test --workspace`, `cargo test -p kfnetlist-extract -p kfnetlist-core`,
+`python3 scripts/cargo-kfnetlist.py run -p kfnetlist-extract --example standalone --target-dir target`,
+`.venv/bin/python -m unittest discover -s tests/python`, and
+`.venv/bin/python scripts/test-kfnetlist.py vendor/kfnetlist/tests tests/python/test_kfnetlist_bridge.py -q`.
+Authoritative command logs: parent `target/kfnetlist-stage2-*.log`.
