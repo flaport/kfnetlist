@@ -2,6 +2,9 @@
 from dataclasses import dataclass
 import gc
 import itertools
+import json
+import os
+from pathlib import Path
 from types import SimpleNamespace as NS
 import warnings
 
@@ -10,6 +13,46 @@ from rlayout import db
 import kfnetlist
 import kfnetlist.extract as candidate
 from extraction_reference import reference
+
+
+CORPUS = Path(__file__).parent / "data/extraction_parity.json"
+RECORDS = {}
+CURRENT_CASE = None
+
+
+def wire(value):
+    """Retain dictionary iteration order and tuple/list distinctions in JSON."""
+    if isinstance(value, dict):
+        return {"dict": [[wire(k), wire(v)] for k, v in value.items()]}
+    if isinstance(value, tuple):
+        return {"tuple": [wire(v) for v in value]}
+    if isinstance(value, list):
+        return [wire(v) for v in value]
+    return value
+
+
+def assert_same(actual, expected):
+    actual, expected = wire(actual), wire(expected)
+    assert actual == expected
+    RECORDS[CURRENT_CASE].append(expected)
+
+
+@pytest.fixture(autouse=True)
+def corpus_case(request):
+    global CURRENT_CASE
+    CURRENT_CASE = request.node.name
+    RECORDS[CURRENT_CASE] = []
+    yield
+    if CORPUS.exists() and not os.environ.get("KFNETLIST_RECORD_CORPUS"):
+        expected = json.loads(CORPUS.read_text())[CURRENT_CASE]
+        assert RECORDS[CURRENT_CASE] == expected
+
+
+@pytest.fixture(scope="module", autouse=True)
+def save_corpus(request):
+    yield
+    if os.environ.get("KFNETLIST_RECORD_CORPUS") and request.session.testsfailed == 0:
+        CORPUS.write_text(json.dumps(RECORDS, indent=2) + "\n")
 
 
 @dataclass
@@ -39,9 +82,9 @@ def observed(call):
 
 
 def test_port_flags():
-    assert [(p.name, int(p)) for p in kfnetlist.PortCheck] == [
+    assert_same([(p.name, int(p)) for p in kfnetlist.PortCheck], [
         (p.name, int(p)) for p in reference().PortCheck
-    ]
+    ])
 
 
 PORT_CASES = list(itertools.product(range(4), range(4), (False, True), ("integer", "complex", "mixed"), (False, True)))
@@ -52,13 +95,13 @@ def test_port_checks(a, b, mirror, kind, snapped):
     p1 = port(a, complex=kind == "complex")
     p2 = port(b, complex=kind != "integer", mirror=mirror)
     expected = reference().check_connection(p1, p2, snapped=snapped)
-    assert kfnetlist.check_connection(p1, p2, snapped=snapped) == expected
+    assert_same(kfnetlist.check_connection(p1, p2, snapped=snapped), expected)
 
 
 @pytest.mark.parametrize("change", [dict(x=1), dict(width=501), dict(layer=2), dict(kind="RF")])
 def test_port_mismatches(change):
     a, b = port(), port(2, **change)
-    assert kfnetlist.check_connection(a, b) == reference().check_connection(a, b)
+    assert_same(kfnetlist.check_connection(a, b), reference().check_connection(a, b))
 
 
 @pytest.mark.parametrize("tolerance", [0, .1, 1, -1])
@@ -66,13 +109,13 @@ def test_port_mismatches(change):
 def test_complex_tolerance_boundary(tolerance, distance):
     a, b = port(complex=True), port(2, complex=True)
     b.dcplx_trans = db.DCplxTrans(1, 180, False, distance, 0)
-    assert kfnetlist.check_connection(a, b, tolerance=tolerance) == reference().check_connection(a, b, tolerance=tolerance)
+    assert_same(kfnetlist.check_connection(a, b, tolerance=tolerance), reference().check_connection(a, b, tolerance=tolerance))
 
 
 def test_missing_transform_error():
     a, b = port(), port()
     b.trans = None
-    assert observed(lambda: kfnetlist.check_connection(a, b)) == observed(lambda: reference().check_connection(a, b))
+    assert_same(observed(lambda: kfnetlist.check_connection(a, b)), observed(lambda: reference().check_connection(a, b)))
 
 
 def optical_port(name, angle=0, **kwargs):
@@ -96,12 +139,12 @@ def test_optical(case, allow_width_mismatch):
     expected = run(reference().extract._geometry.get_optical_nets)
     if case != "duplicate":
         assert expected[0][0] == "ok", expected
-    assert run(candidate.get_optical_nets) == expected
+    assert_same(run(candidate.get_optical_nets), expected)
 
 
 @pytest.mark.parametrize("value", [None, 1, 1.5, "text", [1, 2], ("x", 2), {3: [True, None]}])
 def test_settings(value):
-    assert candidate.serialize_setting(value) == reference().extract._settings.serialize_setting(value)
+    assert_same(candidate.serialize_setting(value), reference().extract._settings.serialize_setting(value))
 
 
 @pytest.mark.parametrize("factory", [lambda: db.Box(1, 2, 3, 4), lambda: db.DBox(1, 2, 3, 4),
@@ -109,7 +152,7 @@ def test_settings(value):
                                     lambda: db.Polygon(db.Box(10)), lambda: db.LayerInfo(1, 2)])
 def test_native_settings(factory):
     value = {"native": factory()}
-    assert candidate.serialize_setting(value) == reference().extract._settings.serialize_setting(value)
+    assert_same(candidate.serialize_setting(value), reference().extract._settings.serialize_setting(value))
 
 
 def make_hierarchy(array=False, electrical=False):
@@ -143,7 +186,7 @@ def test_hierarchy(array, electrical, placement, flatten):
         return {name: value.to_dict() for name, value in fn(top, **kwargs).items()}
     before = str(top._base.kdb_cell.bbox()), len(list(top.insts))
     expected = run(reference().extract._algo.extract)
-    assert run(candidate.extract) == expected
+    assert_same(run(candidate.extract), expected)
     assert (str(top._base.kdb_cell.bbox()), len(list(top.insts))) == before
 
 
@@ -154,7 +197,7 @@ def test_extract_options(options):
     kwargs = dict(wrap_kdb_instance=lambda i: kf.Instance(kcl=kcl, instance=i), **options)
     expected = reference().extract._algo.extract(top, **kwargs)
     actual = candidate.extract(top, **kwargs)
-    assert {k: v.to_dict() for k, v in actual.items()} == {k: v.to_dict() for k, v in expected.items()}
+    assert_same({k: v.to_dict() for k, v in actual.items()}, {k: v.to_dict() for k, v in expected.items()})
 
 
 @pytest.mark.parametrize("options", [{}, {"flatten": True}, {"include_instances": ["LEAF"]},
@@ -167,9 +210,9 @@ def test_electrical_parser_and_retained_result(options):
     # Electrical marking duplicates the layout. Results must outlive the source.
     del top, kcl
     gc.collect()
-    assert candidate.parse_l2n(actual_l2n, **options) == expected
-    assert candidate.l2n_to_json(actual_l2n, **options) == reference().extract._parser.l2n_to_json(expected_l2n, **options)
-    assert candidate.detect_shorts(actual_l2n) == reference().extract._shorts.detect_shorts(expected_l2n)
+    assert_same(candidate.parse_l2n(actual_l2n, **options), expected)
+    assert_same(candidate.l2n_to_json(actual_l2n, **options), reference().extract._parser.l2n_to_json(expected_l2n, **options))
+    assert_same(candidate.detect_shorts(actual_l2n), reference().extract._shorts.detect_shorts(expected_l2n))
 
 
 @pytest.mark.parametrize("case", ["empty", "library", "virtual"])
@@ -191,4 +234,4 @@ def test_cell_relationships(case):
     kwargs = dict(wrap_kdb_instance=lambda i: kf.Instance(kcl=kcl, instance=i), include_placement=True)
     expected = reference().extract._algo.extract(top, **kwargs)
     actual = candidate.extract(top, **kwargs)
-    assert {k: v.to_dict() for k, v in actual.items()} == {k: v.to_dict() for k, v in expected.items()}
+    assert_same({k: v.to_dict() for k, v in actual.items()}, {k: v.to_dict() for k, v in expected.items()})
