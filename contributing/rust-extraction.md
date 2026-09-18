@@ -270,7 +270,7 @@ The pre-existing native instance bottleneck is fixed using stable editable
 references and explicit replacement-alias updates. A 512-instance retained
 append/property/transform workload falls from 2.0397 to 0.01854 seconds. The
 parent CI now runs the guarded full suite against its release wheel with a
-12-minute test limit and retained reports, and gates documentation publication
+7-minute test limit and retained reports, and gates documentation publication
 on success. Hosted run `35347114416` passes 3,134 / skips 4 in 315.87 seconds
 (332.20 seconds including startup/shutdown); its report artifact is retained.
 
