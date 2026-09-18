@@ -200,3 +200,18 @@ list-based parser filters, private metadata helper compatibility and the
 reference's missing-bounds error. The Python reference/golden files were not
 changed. Stage 4 now verifies standalone wheel packaging, public signatures,
 typing and independent frozen-fixture replay before removing the test oracle.
+
+## Stage 4 cutover (awaiting validation)
+
+Python retains the original function signatures, defaults and structural typing
+as thin forwarders. Model and flag imports remain independent of RLayout.
+The temporary Git-loaded Python oracle and corpus-recording switch are removed;
+269 cases now replay the same 279 independently captured observations directly.
+`tests/data/extraction_parity.json` is unchanged. To reproduce characterization,
+use harness revision `60810814` and oracle `662c5a99532e760680a18f7d6f34e47ff89f01a3`.
+
+Build this model wheel and the matching parent RLayout wheel with Maturin.
+The parent `scripts/check-kfnetlist-wheels.py MODEL_WHEEL RLAYOUT_WHEEL` creates
+a fresh environment, proves independent model imports, then tests both import
+orders, complete extraction and retained native graph lifetime. Rust extraction
+still uses only `kfnetlist-extract`/`rlayout`; PyO3 exists in the binding crates.

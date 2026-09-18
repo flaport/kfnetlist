@@ -10,26 +10,23 @@ a separate PyO3 crate exposes them as native Python classes.
 
 ---
 
-## Installation
+## Installation of this fork
+
+This branch moves extraction into Rust. Build the model wheel with Maturin from
+this checkout, or install the KFNetlist wheel produced alongside an RLayout
+checkout that pins this commit. The model package has no Python dependencies.
+Extraction and geometric port checking additionally require the **matching
+RLayout wheel**. These paired development wheels are not a PyPI release.
 
 ```bash
-pip install kfnetlist
+python -m pip install /path/to/wheels/kfnetlist-*.whl /path/to/wheels/rlayout-*.whl
 ```
 
-Or with [uv](https://docs.astral.sh/uv/) (recommended):
-
-```bash
-uv add kfnetlist
-```
-
-Building from source requires a Rust toolchain and [maturin](https://www.maturin.rs/):
-
-```bash
-git clone https://github.com/gdsfactory/kfnetlist.git
-cd kfnetlist
-pip install maturin
-maturin develop --release
-```
+The validated extraction platform is x86-64 GNU/Linux. Build requirements and
+remaining shared system libraries are documented in the RLayout repository.
+Do not combine this branch's extraction adapters with an arbitrary older RLayout
+wheel: the checked live-object bridge is compiled into their shared engine image.
+Python callers still use Python; Rust callers do not require it.
 
 ## Quick Example
 
@@ -74,7 +71,7 @@ diff = extracted_nl.find_net_difference(schematic_nl)
 if diff["missing"]:
     print(f"{len(list(diff['missing']))} nets missing from layout")
 
-# Geometric short detection (requires klayout)
+# Geometric short detection (requires the paired RLayout wheel)
 from kfnetlist.extract import detect_shorts
 shorts = detect_shorts(l2n)
 for s in shorts:
@@ -100,17 +97,18 @@ For a complete walkthrough, see the
 - **Instance removal** — `Netlist.remove_instances()` deletes sub-cell
   instances, merging the nets they touched
 - **Port checking** — `PortCheck` bitmask and `check_connection()` for
-  geometric port-pair comparison (requires klayout)
+  geometric port-pair comparison (requires the paired RLayout wheel)
 - **Connectivity verification** — `detect_opens()`, `find_net_difference()`,
   and `detect_shorts()` for LVS-style verification workflows
 - **Netlist extraction** — `kfnetlist.extract` subpackage extracts hierarchical
-  netlists from kfactory/klayout cells (requires klayout)
+  netlists from KFactory/RLayout cells (requires the paired RLayout wheel)
 
 ## Rust usage
 
-The Cargo workspace contains `crates/kfnetlist-core` (the Rust library) and
-`crates/kfnetlist-python` (the `kfnetlist._native` extension). Rust consumers can
-depend on the core directly, with no Python installation or PyO3 dependency:
+The Cargo workspace contains the independent `kfnetlist-core` model and
+`kfnetlist-extract` domain libraries, plus their two PyO3 binding crates.
+`kfnetlist-extract` depends directly on the RLayout Rust crate. Rust consumers can
+depend on either library without a Python installation or PyO3 dependency:
 
 ```toml
 [dependencies]
@@ -141,19 +139,35 @@ with `uv run --extra dev --with pydantic pytest`. Maturin uses the binding manif
 See [the Rust API guide](contributing/rust-core.md) for ownership, serialization,
 and compatibility details.
 
-## Architecture
+## Extraction architecture
 
+```text
+Rust callers -> kfnetlist-extract -> rlayout
+                       |
+                       v
+                 kfnetlist-core <- kfnetlist._native <- Python model callers
+                       ^
+                       |
+Python extraction -> thin adapters -> rlayout._native._kfnetlist_extract
 ```
-kfnetlist
-├── _native          # Rust extension (PyO3): Netlist, Net, NetlistPort,
-│                    #   PortRef, PortArrayRef, NetlistInstance, NetlistArray
-├── port_check       # PortCheck bitmask + check_connection()
-└── extract          # Netlist extraction from layout cells (requires klayout)
-    ├── _algo        #   Main extraction orchestrator
-    ├── _geometry    #   Optical net extraction from port adjacency
-    ├── _l2n         #   Electrical layout-to-netlist via klayout
-    └── _settings    #   Setting serialization helpers
+
+The shared RLayout extension links `rlayout-python` and
+`kfnetlist-extract-python` into one native engine image. The shim reads KFactory
+metadata, borrows checked native handles, calls Rust and converts results. It
+retains owners and preserves stale-handle rejection and extraction read leases.
+The separate model extension never exchanges engine pointers with it.
+
+For a full Rust-only extraction example, run:
+
+```bash
+PYO3_NO_PYTHON=1 cargo run -p kfnetlist-extract --example optical
 ```
+
+The pinned RLayout dependency currently uses SSH access to its development
+repository. In an RLayout checkout, `scripts/cargo-kfnetlist.py` substitutes the
+local Rust crates. The independent core example remains available without any
+RLayout dependency. See `contributing/rust-extraction.md` for the parity corpus,
+bridge ownership and validation evidence.
 
 ## Documentation
 

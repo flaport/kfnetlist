@@ -1,7 +1,8 @@
 """Type stubs for the Rust-backed ``kfnetlist._native`` module."""
 
 from collections.abc import Callable, Mapping, Sequence
-from typing import Any, Self
+from typing import Any, Self, TypeVar
+from enum import IntFlag
 
 class NetlistPort:
     name: str
@@ -269,3 +270,28 @@ class PlacedNetlist(Netlist):
 def include_from_rdb(xml: str, paths: list[str]) -> str: ...
 def exclude_from_rdb(xml: str, paths: list[str]) -> str: ...
 def filter_rdb(xml: str, predicate: Callable[[str], bool]) -> str: ...
+
+class PortCheck(IntFlag):
+    opposite: int
+    same: int
+    width: int
+    layer: int
+    cross_section: int
+    port_type: int
+    position: int
+    all_opposite: int
+    all_overlap: int
+
+NetlistT = TypeVar("NetlistT", bound=Netlist)
+
+def flatten_netlists(
+    netlists: Mapping[str, NetlistT],
+    cells: Sequence[str] | None = None,
+    *,
+    exclude: Sequence[str] | None = None,
+    instance_cell_maps: Mapping[str, Mapping[str, str]] | None = None,
+    recursive: bool = True,
+    allow_unconnected_ports: bool = False,
+    warn_skipped: bool = False,
+    separator: str = ".",
+) -> dict[str, NetlistT]: ...
