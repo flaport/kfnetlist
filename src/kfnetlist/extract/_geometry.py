@@ -183,7 +183,7 @@ def get_optical_nets(
         if inst.na > 1 or inst.nb > 1:
             for ia in range(inst.na):
                 for ib in range(inst.nb):
-                    st = kdb.InstElement(inst.instance, ia, ib).specific_trans()
+                    st = inst.instance.element_transform(ia, ib).s_trans()
                     for j, port in enumerate(inst.ports):
                         if port.port_type not in port_types:
                             continue

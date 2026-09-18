@@ -2,7 +2,6 @@
 from dataclasses import dataclass
 import gc
 import itertools
-import json
 from types import SimpleNamespace as NS
 import warnings
 
@@ -116,7 +115,7 @@ def test_native_settings(factory):
 def make_hierarchy(array=False, electrical=False):
     import kfactory as kf
     layer = db.LayerInfo(1, 0, "M1" if electrical else "WG")
-    kcl = kf.KCLayout(name="parity_pdk", connectivity=[(layer,)] if electrical else [])
+    kcl = kf.KCLayout(name="parity_pdk", connectivity=[(layer, db.LayerInfo(2, 0, "M2"))] if electrical else [])
     child = kcl.kcell("LEAF")
     child.shapes(layer).insert(db.Box(0, -250, 1000, 250))
     for name, x, angle in [("a", 0, 2), ("b", 1000, 0)]:
@@ -135,7 +134,7 @@ def make_hierarchy(array=False, electrical=False):
     return kf, kcl, top
 
 
-@pytest.mark.parametrize("array,electrical,placement,flatten", itertools.product((False, True), repeat=4))
+@pytest.mark.parametrize("array,electrical,placement,flatten", list(itertools.product((False, True), repeat=4)))
 def test_hierarchy(array, electrical, placement, flatten):
     kf, kcl, top = make_hierarchy(array, electrical)
     kwargs = dict(wrap_kdb_instance=lambda i: kf.Instance(kcl=kcl, instance=i),

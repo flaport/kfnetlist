@@ -42,7 +42,7 @@ flatten, placement, instance-info and binding compatibility tests.
 | `_flatten.py` | existing core flattening engine and Rust mapping orchestration | convert mapping inputs/outputs |
 
 KFactory's direct extraction seam consists of three calls in `kcell.py`:
-`l2n_elec`, `extract`, and `get_optical_nets`. Its `checks.py` imports
+`l2n_elec`, `extract`, and `get_optical_nets`. Its `checks.py` has two `check_connection` calls and imports
 `check_connection` and `PortCheck`; the remaining imported KFNetlist classes are
 model consumers. Preserve the required `wrap_kdb_instance` naming hook at the
 Python boundary, without putting Python callbacks into the Rust extraction API.
