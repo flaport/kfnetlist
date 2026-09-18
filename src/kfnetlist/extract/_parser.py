@@ -142,7 +142,7 @@ def _serialize_circuit(
             {
                 "name": subc.name or f"${subc.id()}",
                 "circuit_ref": ref_name,
-                "transform": str(subc.trans),
+                "transform": subc.trans.to_s(),
             }
         )
 

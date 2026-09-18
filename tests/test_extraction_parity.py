@@ -170,3 +170,25 @@ def test_electrical_parser_and_retained_result(options):
     assert candidate.parse_l2n(actual_l2n, **options) == expected
     assert candidate.l2n_to_json(actual_l2n, **options) == reference().extract._parser.l2n_to_json(expected_l2n, **options)
     assert candidate.detect_shorts(actual_l2n) == reference().extract._shorts.detect_shorts(expected_l2n)
+
+
+@pytest.mark.parametrize("case", ["empty", "library", "virtual"])
+def test_cell_relationships(case):
+    import kfactory as kf
+    kcl = kf.KCLayout(name="parity_relationships")
+    top = kcl.kcell("ROOT")
+    if case == "library":
+        source = kf.KCLayout(name="parity_source")
+        child = source.kcell("LIB_LEAF")
+        child.shapes(db.LayerInfo(1, 0)).insert(db.Box(1000))
+        inst = top << child
+        inst.name = "proxy"
+        assert inst.cell.is_library_cell()
+    elif case == "virtual":
+        virtual = kcl.vkcell("VIRTUAL")
+        virtual.shapes(kcl.find_layer(1, 0)).insert(db.DPolygon(db.DBox(1)))
+        kf.VInstance(virtual).insert_into(top)
+    kwargs = dict(wrap_kdb_instance=lambda i: kf.Instance(kcl=kcl, instance=i), include_placement=True)
+    expected = reference().extract._algo.extract(top, **kwargs)
+    actual = candidate.extract(top, **kwargs)
+    assert {k: v.to_dict() for k, v in actual.items()} == {k: v.to_dict() for k, v in expected.items()}
