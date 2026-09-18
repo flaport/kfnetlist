@@ -11,7 +11,7 @@ description = "KFNetlist extraction bindings linked into the RLayout extension"
 [dependencies]
 kfnetlist-extract = { path = "../kfnetlist-extract" }
 pyo3 = "0.29.2"
-rlayout-python = { git = "ssh://git@github.com/doplaydo/rlayout", rev = "078cbf0d29f270e6b32dfbd3c1db366a23d87c17" }
+rlayout-python = { git = "ssh://git@github.com/doplaydo/rlayout", rev = "a4733c8cad56c35f127b4f6865b07fbe223679e1" }
 serde.workspace = true
 serde_json.workspace = true
 indexmap.workspace = true

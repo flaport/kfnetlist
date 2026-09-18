@@ -153,15 +153,16 @@ fn instance_input(py: Python<'_>, value: &Bound<'_, PyAny>) -> PyResult<Instance
         settings::serialize_setting(py, &cell.getattr("settings")?.call_method0("model_dump")?)?;
     let named = value.call_method0("is_named")?.is_truthy()?;
     let info = if named {
-        value
-            .getattr("info")
-            .ok()
-            .filter(|v| !v.is_none())
-            .map(|v| v.call_method0("model_dump"))
-            .transpose()?
-            .map(|v| pythonize::depythonize(&v))
-            .transpose()?
-            .unwrap_or_default()
+        match value.getattr("info") {
+            Ok(info) if !info.is_none() => {
+                pythonize::depythonize(&info.call_method0("model_dump")?)?
+            }
+            Ok(_) => Default::default(),
+            Err(error) if error.is_instance_of::<pyo3::exceptions::PyAttributeError>(py) => {
+                Default::default()
+            }
+            Err(error) => return Err(error),
+        }
     } else {
         Default::default()
     };

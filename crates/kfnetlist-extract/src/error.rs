@@ -9,6 +9,8 @@ pub enum Error {
     Invalid(String),
     #[error("{0}")]
     Missing(String),
+    #[error("instance has no bounding box")]
+    MissingInstanceBounds,
     #[error("list index out of range")]
     EmptyConnectivity,
 }

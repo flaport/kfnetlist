@@ -48,6 +48,9 @@ fn domain_error(error: kfnetlist_extract::Error) -> PyErr {
     match error {
         Error::Native(error) => interop::native_error(error),
         Error::Missing(message) => PyKeyError::new_err(message),
+        Error::MissingInstanceBounds => {
+            PyAttributeError::new_err("'NoneType' object has no attribute 'left'")
+        }
         Error::EmptyConnectivity => PyIndexError::new_err("list index out of range"),
         other => PyValueError::new_err(other.to_string()),
     }

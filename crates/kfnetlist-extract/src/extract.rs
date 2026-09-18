@@ -256,7 +256,7 @@ pub fn prepare(
                 let view = layout.instance(&inst.native)?;
                 let bounds = view
                     .bbox(None)?
-                    .unwrap_or_else(db::Box::empty)
+                    .ok_or(Error::MissingInstanceBounds)?
                     .to_dtype(dbu)?;
                 extras.insert(
                     inst.name,
