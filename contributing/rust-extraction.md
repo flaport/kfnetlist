@@ -246,3 +246,10 @@ or importing the model must not resolve RLayout. Parent Cargo integration still
 links extraction into the shared engine image, with no domain/source changes.
 Validate from a fresh source archive with no lockfiles, no Git cache and no
 network, not only from an already-resolved developer checkout.
+
+Final acceptance exposed a pre-existing RLayout instance-refresh bottleneck.
+The user authorized a bounded native bookkeeping fix and a timed full KFactory
+CI gate. The extraction corpus still passes 485 tests and the four schematic
+notebooks pass with release wheels. Final acceptance awaits the native fix and
+full-suite run; neither interrupted routing probes nor partial runs count as a
+full pass. The parent `work.md` records the measured baseline and validation plan.
