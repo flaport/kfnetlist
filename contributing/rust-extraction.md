@@ -226,3 +226,12 @@ checks; the model wheel also works with RLayout absent. The Rust example still
 builds/runs without Python discovery or linkage. Parent Rust/Python checks pass.
 Logs and artifacts: parent `target/kfnetlist-stage4-*`. Final consumer acceptance
 remains Stage 5; no broad suite claim is made from the focused checks.
+
+## Final acceptance sequence
+
+Use the validated paired wheels for the guarded KFactory netlist, L2N,
+schematic, metadata and PDK modules, then the complete suite. Execute the four
+schematic documentation notebooks with the named `rlayout` kernel and the
+upstream-KLayout import guard. Parent `scripts/check-kfnetlist-notebooks.py`
+records executed artifacts; `work.md` will record the final report and counts.
+The broad migration acceptance gate remains pending until those runs finish.
