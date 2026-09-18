@@ -215,3 +215,14 @@ The parent `scripts/check-kfnetlist-wheels.py MODEL_WHEEL RLAYOUT_WHEEL` creates
 a fresh environment, proves independent model imports, then tests both import
 orders, complete extraction and retained native graph lifetime. Rust extraction
 still uses only `kfnetlist-extract`/`rlayout`; PyO3 exists in the binding crates.
+
+### Stage 4 validated, 2026-09-18
+
+At KFNetlist `8ed5d21` / parent `146cefb`, all 485 tests pass, including the
+269-case/279-observation frozen replay with unchanged expectations. All 16 typed
+forwarders preserve original signatures. Fresh paired wheel installations pass
+in both import orders, including complete extraction and native lease/lifetime
+checks; the model wheel also works with RLayout absent. The Rust example still
+builds/runs without Python discovery or linkage. Parent Rust/Python checks pass.
+Logs and artifacts: parent `target/kfnetlist-stage4-*`. Final consumer acceptance
+remains Stage 5; no broad suite claim is made from the focused checks.
