@@ -160,3 +160,24 @@ Reproduce from the parent with `cargo check --workspace`,
 `.venv/bin/python -m unittest discover -s tests/python`, and
 `.venv/bin/python scripts/test-kfnetlist.py vendor/kfnetlist/tests tests/python/test_kfnetlist_bridge.py -q`.
 Authoritative command logs: parent `target/kfnetlist-stage2-*.log`.
+
+## Stage 3 implementation (awaiting validation)
+
+All public extraction operations now dispatch into `kfnetlist-extract` through
+`kfnetlist-extract-python`: port flags/geometry, ordered optical adjacency,
+electrical marker extraction, ordered L2N parsing, shorts, settings encoding,
+placement and hierarchical assembly. Collection flattening moved to the existing
+model core. Source algorithms remain reproducible only through the pinned test
+oracle; production Python files are exports and the lazy port-check boundary.
+
+Metadata equality is interned at the boundary. Native extraction matches are
+returned to the binding for the existing KFactory name hook, then resolved names
+are supplied to Rust finalization; no Python callback enters the Rust API. Native
+geometry access uses checked wrapper guards, not method calls through `rlayout.db`.
+Python JSON encoding and opaque-value representation stay boundary conversions.
+The Rust parser's ordered tree is independently serializable. Original native
+wrapper formatting and opaque identity are preserved by setting conversion.
+
+`examples/optical.rs` exercises the complete standalone extraction API. The
+frozen 269-case corpus and existing parser goldens remain unchanged. Stage 3 is
+awaiting its post-push compilation and parity checks.

@@ -9,6 +9,8 @@ description = "Python-independent netlist extraction using RLayout"
 
 [dependencies]
 kfnetlist-core = { path = "../kfnetlist-core" }
-rlayout = { git = "ssh://git@github.com/doplaydo/rlayout", rev = "62a7bcb" }
+rlayout = { git = "ssh://git@github.com/doplaydo/rlayout", rev = "078cbf0d29f270e6b32dfbd3c1db366a23d87c17" }
 indexmap.workspace = true
 serde_json.workspace = true
+thiserror = "2"
+serde.workspace = true

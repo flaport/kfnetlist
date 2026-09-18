@@ -41,6 +41,29 @@ use port::{NetlistPort, PortArrayRef, PortRef};
 
 #[pymodule]
 fn _native(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(flatten::flatten_netlists, m)?)?;
+    use kfnetlist_core::port_check::*;
+    let flags = pyo3::types::PyDict::new(m.py());
+    for (name, value) in [
+        ("opposite", OPPOSITE),
+        ("same", SAME),
+        ("width", WIDTH),
+        ("layer", LAYER),
+        ("cross_section", CROSS_SECTION),
+        ("port_type", PORT_TYPE),
+        ("position", POSITION),
+        ("all_opposite", OPPOSITE | WIDTH | PORT_TYPE | LAYER),
+        ("all_overlap", WIDTH | PORT_TYPE | LAYER),
+    ] {
+        flags.set_item(name, value)?;
+    }
+    let flag = m
+        .py()
+        .import("enum")?
+        .getattr("IntFlag")?
+        .call1(("PortCheck", flags))?;
+    flag.setattr("__module__", "kfnetlist.port_check")?;
+    m.add("PortCheck", flag)?;
     m.add_class::<NetlistPort>()?;
     m.add_class::<PortRef>()?;
     m.add_class::<PortArrayRef>()?;

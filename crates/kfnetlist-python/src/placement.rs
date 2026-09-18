@@ -280,7 +280,10 @@ pub struct PlacedNetlist {
 impl PlacedNetlist {
     /// Assemble a `(Netlist, PlacedNetlist)` initializer from a base netlist
     /// and an extras map, keeping only entries for instances that exist.
-    fn init_from(base: Netlist, extras: IndexMap<String, PlacedExtra>) -> PyClassInitializer<Self> {
+    pub(crate) fn init_from(
+        base: Netlist,
+        extras: IndexMap<String, PlacedExtra>,
+    ) -> PyClassInitializer<Self> {
         let placed = kfnetlist_core::PlacedNetlist::new(base.0, extras);
         PyClassInitializer::from(Netlist(placed.netlist)).add_subclass(PlacedNetlist {
             extras: placed.extras,

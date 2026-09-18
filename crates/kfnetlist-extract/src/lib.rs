@@ -1,16 +1,21 @@
 //! Layout-dependent netlist operations. This crate never initializes Python.
 use indexmap::IndexMap;
-use rlayout::{db, Error};
+pub use rlayout::db;
+mod error;
+pub mod geometry;
+pub mod ports;
+pub use error::{Error, Result};
 
 /// Port geometry preserves whether the caller supplied grid or physical units.
 #[derive(Clone, Copy, Debug)]
 pub enum PortTransform {
     Grid(db::Trans),
     Physical(db::DCplxTrans),
+    Both(db::Trans, db::DCplxTrans),
 }
 
 /// Owned boundary metadata; no language objects or callbacks enter extraction.
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Port {
     pub name: String,
     pub port_type: String,
@@ -18,6 +23,8 @@ pub struct Port {
     pub layer: db::LayerInfo,
     pub width: i64,
     pub dbu: f64,
+    /// Equality key interned from cross-section metadata by the caller.
+    pub cross_section: usize,
 }
 
 /// Metadata supplied separately from borrowed native layout storage.
@@ -38,7 +45,7 @@ pub fn connected_geometry(
     layout: &db::Layout,
     root: db::CellId,
     connectivity: &[Vec<db::LayerId>],
-) -> Result<db::LayoutToNetlist, Error> {
+) -> std::result::Result<db::LayoutToNetlist, rlayout::Error> {
     let mut extraction = db::LayoutToNetlist::from_cell(layout, root)?;
     let mut layers = IndexMap::new();
     for &id in connectivity.iter().flatten() {
@@ -57,3 +64,9 @@ pub fn connected_geometry(
     extraction.check_extraction_errors()?;
     Ok(extraction)
 }
+
+pub mod electrical;
+pub mod extract;
+pub mod parser;
+pub mod settings;
+pub mod shorts;

@@ -492,3 +492,32 @@ pub fn flatten_netlist(
     data.ports.sort();
     Ok(FlattenOutput { data, warnings })
 }
+
+/// Flatten each graph against the unchanged original hierarchy in input order.
+/// Both plain and placement-aware bindings use this same collection operation.
+pub fn flatten_netlists(
+    netlists: IndexMap<String, NetlistData>,
+    instance_cell_maps: &HashMap<String, HashMap<String, String>>,
+    options: &FlattenOptions,
+) -> Result<(IndexMap<String, NetlistData>, Vec<String>)> {
+    // Each output owns its data; all bases see the same independent originals.
+    let originals = netlists
+        .iter()
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+    let empty = HashMap::new();
+    let mut result = IndexMap::new();
+    let mut warnings = Vec::new();
+    for (name, base) in netlists {
+        let output = flatten_netlist(
+            base,
+            instance_cell_maps.get(&name).unwrap_or(&empty),
+            &originals,
+            instance_cell_maps,
+            options,
+        )?;
+        result.insert(name, output.data);
+        warnings.extend(output.warnings);
+    }
+    Ok((result, warnings))
+}

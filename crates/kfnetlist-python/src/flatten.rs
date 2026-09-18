@@ -57,3 +57,60 @@ pub(crate) fn emit_warnings(py: Python<'_>, warnings: Vec<String>) -> PyResult<(
     }
     Ok(())
 }
+
+#[pyfunction]
+#[pyo3(signature=(netlists,cells=None,*,exclude=None,instance_cell_maps=None,recursive=true,allow_unconnected_ports=false,warn_skipped=false,separator=".".to_owned()))]
+pub(crate) fn flatten_netlists(
+    py: Python<'_>,
+    netlists: &Bound<'_, PyAny>,
+    cells: Option<Vec<String>>,
+    exclude: Option<Vec<String>>,
+    instance_cell_maps: Option<HashMap<String, HashMap<String, String>>>,
+    recursive: bool,
+    allow_unconnected_ports: bool,
+    warn_skipped: bool,
+    separator: String,
+) -> PyResult<Py<PyAny>> {
+    let dict = py
+        .import("builtins")?
+        .getattr("dict")?
+        .call1((netlists,))?
+        .cast_into::<PyDict>()?;
+    let mut placed = HashMap::new();
+    let mut values = IndexMap::new();
+    for (key, value) in dict.iter() {
+        let name: String = key.extract()?;
+        placed.insert(name.clone(), value.is_instance_of::<PlacedNetlist>());
+        values.insert(name, read_netlist(&value)?);
+    }
+    let options = kfnetlist_core::FlattenOptions::new(
+        cells,
+        exclude,
+        recursive,
+        allow_unconnected_ports,
+        warn_skipped,
+        separator,
+    );
+    let (output, warnings) = kfnetlist_core::flatten::flatten_netlists(
+        values,
+        &instance_cell_maps.unwrap_or_default(),
+        &options,
+    )
+    .map_err(crate::core_error)?;
+    emit_warnings(py, warnings)?;
+    let result = PyDict::new(py);
+    for (name, data) in output {
+        let plain = Netlist(kfnetlist_core::Netlist {
+            instances: data.instances,
+            nets: data.nets,
+            ports: data.ports,
+        });
+        let value = if placed[&name] {
+            Py::new(py, PlacedNetlist::init_from(plain, data.extras))?.into_any()
+        } else {
+            Py::new(py, plain)?.into_any()
+        };
+        result.set_item(name, value)?;
+    }
+    Ok(result.into_any().unbind())
+}

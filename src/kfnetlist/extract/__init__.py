@@ -1,6 +1,6 @@
 """Netlist extraction from a layout cell.
 
-This subpackage requires :mod:`klayout`.
+This subpackage uses the shared RLayout native extension.
 """
 
 from ._algo import extract
