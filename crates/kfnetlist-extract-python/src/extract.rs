@@ -4,7 +4,7 @@ use indexmap::IndexMap;
 use kfnetlist_extract::{
     db,
     electrical::{self, MarkerCell, MarkerPort, PortMapping},
-    extract::{self, CellInput, Flatten, InstanceInput, Options},
+    extract::{self as domain, CellInput, Flatten, InstanceInput, Options},
 };
 use pyo3::{
     exceptions::PyValueError,
@@ -200,7 +200,7 @@ fn _placement_for(py: Python<'_>, inst: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>
     model(
         py,
         "Placement",
-        &extract::placement(transform, bounds).map_err(domain_error)?,
+        &domain::placement(transform, bounds).map_err(domain_error)?,
     )
 }
 #[pyfunction]
@@ -276,7 +276,7 @@ fn extract(
         flatten,
     };
     let mut prepared =
-        extract::prepare(&layout, root, &markers, cells, options).map_err(domain_error)?;
+        domain::prepare(&layout, root, &markers, cells, options).map_err(domain_error)?;
     let mut names = Vec::new();
     for matched in prepared.take_matches() {
         let instance = interop::wrap_instance(&owner, matched.instance)?;

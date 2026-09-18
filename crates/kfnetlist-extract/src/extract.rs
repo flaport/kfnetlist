@@ -7,8 +7,8 @@ use crate::{
 };
 use indexmap::IndexMap;
 use kfnetlist_core::{
-    self as model, BBox, Net, NetMember, Netlist, NetlistData, NetlistPort, PlacedExtra, Placement,
-    PortArrayRef, PortRef,
+    self as model, BBox, NetMember, Netlist, NetlistData, PlacedExtra, Placement, PortArrayRef,
+    PortRef,
 };
 use std::collections::{HashMap, HashSet};
 
