@@ -181,3 +181,22 @@ wrapper formatting and opaque identity are preserved by setting conversion.
 `examples/optical.rs` exercises the complete standalone extraction API. The
 frozen 269-case corpus and existing parser goldens remain unchanged. Stage 3 is
 awaiting its post-push compilation and parity checks.
+
+### Stage 3 validated, 2026-09-18
+
+KFNetlist `e3c830a`, parent integration `12ee958`: 485 KFNetlist tests pass,
+including the original 269 differential cases / 279 observations / zero
+unacceptable differences. An additional reference-observed empty-instance
+placement regression passes without replacing any frozen expectations.
+The affected guarded KFactory netlist/L2N/schematic modules pass 28 / skip 1.
+Parent Python tests pass 179, parent Rust tests 159, model core tests 11 and
+extraction tests 4. Workspace check/format and native ownership sanitizers pass.
+The complete `optical` Rust example executes with `PYO3_NO_PYTHON=1`, and its
+normal dependency tree, dynamic dependencies and imported symbols contain no
+Python dependency or runtime. Logs: parent `target/kfnetlist-stage3-*.log`.
+
+Post-push corrections addressed native wrapper selection, typed borrow guards,
+list-based parser filters, private metadata helper compatibility and the
+reference's missing-bounds error. The Python reference/golden files were not
+changed. Stage 4 now verifies standalone wheel packaging, public signatures,
+typing and independent frozen-fixture replay before removing the test oracle.
