@@ -40,7 +40,7 @@ def _build_l2n() -> tuple[kdb.LayoutToNetlist, kdb.LayerInfo, kdb.LayerInfo]:
     leaf.shapes(l1).insert(kdb.Text("PIN_A", kdb.Trans(500, 500)))  # ty: ignore[no-matching-overload]
 
     top = ly.create_cell("TOP")
-    top.insert(kdb.CellInstArray(leaf.cell_index(), kdb.Trans()))
+    top.insert(kdb.CellInstArray(leaf, kdb.Trans()))
     top.shapes(l1).insert(kdb.Box(0, 0, 2000, 100))
     top.shapes(l2).insert(kdb.Box(500, 500, 1500, 600))
     top.shapes(l1).insert(kdb.Text("NET_X", kdb.Trans(100, 50)))  # ty: ignore[no-matching-overload]

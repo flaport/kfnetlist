@@ -186,7 +186,7 @@ def test_cell_relationships(case):
         assert inst.cell.is_library_cell()
     elif case == "virtual":
         virtual = kcl.vkcell("VIRTUAL")
-        virtual.shapes(kcl.find_layer(1, 0)).insert(db.DPolygon(db.DBox(1)))
+        virtual.shapes(kcl.layer(1, 0)).insert(db.DPolygon(db.DBox(1)))
         kf.VInstance(virtual).insert_into(top)
     kwargs = dict(wrap_kdb_instance=lambda i: kf.Instance(kcl=kcl, instance=i), include_placement=True)
     expected = reference().extract._algo.extract(top, **kwargs)
