@@ -1,4 +1,5 @@
 [package]
+workspace = "../.."
 name = "kfnetlist-core"
 version.workspace = true
 edition.workspace = true

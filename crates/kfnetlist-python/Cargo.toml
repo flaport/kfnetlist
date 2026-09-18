@@ -1,4 +1,5 @@
 [package]
+workspace = "../.."
 name = "kfnetlist-python"
 version.workspace = true
 edition.workspace = true
