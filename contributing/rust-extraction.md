@@ -1,6 +1,6 @@
 # Rust extraction migration
 
-Status: Stage 1 implemented, awaiting characterization validation.
+Status: Stage 1 validated on 2026-09-18; Stage 2 is next.
 
 The parent RLayout repository's `work.md` is the implementation plan and parity
 contract. Preserve the existing Python signatures and observable outputs while
@@ -85,3 +85,26 @@ The parent also repairs extraction Region ownership: native delegate transfer
 preserves registered deep-layer identity, and materialization releases only lazy
 source leases, retaining extraction owners. Existing parser golden files pass
 unchanged after that repair.
+
+## Stage 1 acceptance evidence
+
+Validated with KFNetlist runtime `808cdc11`, Python oracle `662c5a9`, parent
+native fixes through `85ffa51`, and KFactory `53c43c1`:
+
+- Guarded KFNetlist suite: **484 passed**, one existing deprecated-method warning.
+- Differential corpus: **269 cases / 279 observations / zero differences**.
+  `tests/data/extraction_parity.json` records the reference results, retaining
+  dictionary order and tuple/list distinctions. A separate process replayed
+  every recorded case successfully. No object addresses are normalized away.
+- Original parser golden files: pass unchanged.
+- Guarded KFactory netlist/L2N/schematic modules: **28 passed / 1 skipped**.
+- KFNetlist standalone Rust core: **11 passed**.
+- Parent Rust workspace: **159 passed**; Python suite: **176 passed**.
+- Parent workspace check/format and native ASan/UBSan/LSan harness: passed.
+
+Parent logs are under `target/kfnetlist-stage1-*.log`. To regenerate this initial
+reference corpus, explicitly set `KFNETLIST_RECORD_CORPUS=1` while running the
+complete `test_extraction_parity.py` module. After Rust porting starts, a changed
+reference needs an explained contract decision; do not regenerate from candidate
+behavior to hide a difference. The recording helper reads expected results from
+the pinned oracle and only writes after successful comparisons.
