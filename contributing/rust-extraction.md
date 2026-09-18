@@ -13,7 +13,7 @@ conversion/binding code. The first target remains x86-64 GNU/Linux.
 - Parent plan: `89c189a9e32b8e4f30075d4ee3c52b505645e946`.
 - Initial KFNetlist: `494eb6eb80961798d96fc9be4b3f76672dfa03e7`.
 - KFactory: `53c43c14a9d66a33f6f991db7bb05f0bb36a1cc6`.
-- Python oracle: `3e803232a9e7aa0794729482052059491025c7b9`, the initial implementation with explicit RLayout
+- Python oracle: `5dd2d40b2920fda7b35a8525e5327673081ccaf3`, the initial implementation with explicit RLayout
   binding adaptations for parser/shorts internal-layout access, native array
   element transforms and test setup.
 - KFNetlist 0.3.0 uses PyO3/pythonize 0.23; RLayout uses PyO3 0.29.2.
