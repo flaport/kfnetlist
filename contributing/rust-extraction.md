@@ -235,3 +235,14 @@ schematic documentation notebooks with the named `rlayout` kernel and the
 upstream-KLayout import guard. Parent `scripts/check-kfnetlist-notebooks.py`
 records executed artifacts; `work.md` will record the final report and counts.
 The broad migration acceptance gate remains pending until those runs finish.
+
+### Model source-build isolation
+
+The CI retry showed that path overrides alone do not reliably prevent Cargo
+from fetching the original Git source during fresh lock resolution. The model
+workspace now contains only core/model bindings. Extraction and its companion
+binding use separate crate workspaces with explicit package metadata. Building
+or importing the model must not resolve RLayout. Parent Cargo integration still
+links extraction into the shared engine image, with no domain/source changes.
+Validate from a fresh source archive with no lockfiles, no Git cache and no
+network, not only from an already-resolved developer checkout.

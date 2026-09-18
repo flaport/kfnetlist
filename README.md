@@ -105,8 +105,9 @@ For a complete walkthrough, see the
 
 ## Rust usage
 
-The Cargo workspace contains the independent `kfnetlist-core` model and
-`kfnetlist-extract` domain libraries, plus their two PyO3 binding crates.
+The model Cargo workspace contains `kfnetlist-core` and its PyO3 binding.
+`kfnetlist-extract` and its companion binding are separate crate workspaces, so
+model-only source builds never resolve the native engine.
 `kfnetlist-extract` depends directly on the RLayout Rust crate. Rust consumers can
 depend on either library without a Python installation or PyO3 dependency:
 
@@ -160,7 +161,7 @@ The separate model extension never exchanges engine pointers with it.
 For a full Rust-only extraction example, run:
 
 ```bash
-PYO3_NO_PYTHON=1 cargo run -p kfnetlist-extract --example optical
+PYO3_NO_PYTHON=1 cargo run --manifest-path crates/kfnetlist-extract/Cargo.toml --example optical
 ```
 
 The pinned RLayout dependency currently uses SSH access to its development
