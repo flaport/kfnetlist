@@ -180,6 +180,49 @@ fn instance_input(py: Python<'_>, value: &Bound<'_, PyAny>) -> PyResult<Instance
     })
 }
 #[pyfunction]
+fn _create_inst_entry(
+    py: Python<'_>,
+    nl: &Bound<'_, PyAny>,
+    inst: &Bound<'_, PyAny>,
+) -> PyResult<()> {
+    let cell = inst.getattr("cell")?;
+    let component = factory(&cell)?.unwrap_or(cell.getattr("name")?.extract()?);
+    let kcl = if cell.call_method0("is_library_cell")?.is_truthy()? {
+        cell.call_method0("library")?.call_method0("name")?
+    } else {
+        cell.getattr("kcl")?.getattr("name")?
+    };
+    let settings =
+        settings::serialize_setting(py, &cell.getattr("settings")?.call_method0("model_dump")?)?;
+    let kwargs = PyDict::new(py);
+    if inst.call_method0("is_named")?.is_truthy()? {
+        match inst.getattr("info") {
+            Ok(info) if !info.is_none() => {
+                kwargs.set_item("info", info.call_method0("model_dump")?)?
+            }
+            Ok(_) => {}
+            Err(error) if error.is_instance_of::<pyo3::exceptions::PyAttributeError>(py) => {}
+            Err(error) => return Err(error),
+        }
+    }
+    // Model values belong to the separate engine-free extension. This private
+    // compatibility adapter dispatches its existing native mutation boundary.
+    nl.call_method(
+        "create_inst",
+        (
+            inst.getattr("name")?,
+            kcl,
+            component,
+            settings,
+            inst.getattr("na")?,
+            inst.getattr("nb")?,
+        ),
+        Some(&kwargs),
+    )?;
+    Ok(())
+}
+
+#[pyfunction]
 fn _placement_for(py: Python<'_>, inst: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
     let transform = interop::dcplx_trans(&inst.getattr("dcplx_trans")?)?;
     let native = inst.getattr("instance")?;
@@ -310,6 +353,7 @@ fn extract(
 }
 pub(crate) fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(l2n_elec, module)?)?;
+    module.add_function(wrap_pyfunction!(_create_inst_entry, module)?)?;
     module.add_function(wrap_pyfunction!(_placement_for, module)?)?;
     module.add_function(wrap_pyfunction!(extract, module)?)
 }
