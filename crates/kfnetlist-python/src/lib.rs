@@ -93,7 +93,7 @@ pub(crate) fn cmp_to_py(op: CompareOp, lt: bool, eq: bool) -> bool {
 /// when the operands are not comparable. CPython will then try the reflected
 /// operation, and ultimately fall back to identity-based equality / a
 /// `TypeError` on ordering ops.
-pub(crate) fn richcmp_result(py: Python<'_>, value: Option<bool>) -> PyObject {
+pub(crate) fn richcmp_result(py: Python<'_>, value: Option<bool>) -> Py<PyAny> {
     use pyo3::IntoPyObjectExt;
     match value {
         Some(b) => b.into_py_any(py).expect("bool is always convertible"),
@@ -129,7 +129,7 @@ pub(crate) fn from_py_any<'py, T: for<'de> Deserialize<'de>>(
     depythonize(obj).map_err(|e| pyo3::exceptions::PyValueError::new_err(format!("from_dict: {e}")))
 }
 
-pub(crate) fn pydantic_core_schema(cls: &Bound<'_, pyo3::types::PyType>) -> PyResult<PyObject> {
+pub(crate) fn pydantic_core_schema(cls: &Bound<'_, pyo3::types::PyType>) -> PyResult<Py<PyAny>> {
     let py = cls.py();
     let locals = pyo3::types::PyDict::new(py);
     locals.set_item("cls", cls)?;

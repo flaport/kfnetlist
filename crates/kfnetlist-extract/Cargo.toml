@@ -1,0 +1,13 @@
+[package]
+name = "kfnetlist-extract"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Python-independent netlist extraction using RLayout"
+
+[dependencies]
+kfnetlist-core = { path = "../kfnetlist-core" }
+rlayout = { git = "https://github.com/doplaydo/rlayout", rev = "0dc8e4c" }
+indexmap.workspace = true
+serde_json.workspace = true

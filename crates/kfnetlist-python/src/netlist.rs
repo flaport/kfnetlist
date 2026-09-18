@@ -288,9 +288,9 @@ impl Netlist {
             .map_err(core_error)
     }
 
-    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyResult<PyObject> {
+    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyResult<Py<PyAny>> {
         let py = other.py();
-        let Ok(other) = other.downcast::<Netlist>() else {
+        let Ok(other) = other.cast::<Netlist>() else {
             return Ok(py.NotImplemented());
         };
         let other = other.borrow();
@@ -312,7 +312,7 @@ impl Netlist {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 

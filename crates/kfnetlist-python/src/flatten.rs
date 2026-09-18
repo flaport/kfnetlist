@@ -14,7 +14,7 @@ use crate::placement::PlacedNetlist;
 pub(crate) fn read_netlists(
     obj: &Bound<'_, PyAny>,
 ) -> PyResult<HashMap<String, kfnetlist_core::NetlistData>> {
-    let dict = obj.downcast::<PyDict>().map_err(|_| {
+    let dict = obj.cast::<PyDict>().map_err(|_| {
         PyTypeError::new_err("netlists must be a dict of {cell name: Netlist | PlacedNetlist}")
     })?;
     let mut out = HashMap::with_capacity(dict.len());
@@ -29,7 +29,7 @@ pub(crate) fn read_netlists(
 
 fn read_netlist(obj: &Bound<'_, PyAny>) -> PyResult<kfnetlist_core::NetlistData> {
     // PlacedNetlist first: it is a Python subclass of Netlist.
-    if let Ok(placed) = obj.downcast::<PlacedNetlist>() {
+    if let Ok(placed) = obj.cast::<PlacedNetlist>() {
         let child = placed.borrow();
         let base: &Netlist = child.as_ref();
         return Ok(kfnetlist_core::NetlistData {
@@ -40,7 +40,7 @@ fn read_netlist(obj: &Bound<'_, PyAny>) -> PyResult<kfnetlist_core::NetlistData>
         });
     }
     let plain = obj
-        .downcast::<Netlist>()
+        .cast::<Netlist>()
         .map_err(|_| PyTypeError::new_err("netlists values must be Netlist or PlacedNetlist"))?
         .borrow();
     Ok(kfnetlist_core::NetlistData {

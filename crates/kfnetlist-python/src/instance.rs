@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::{cmp_to_py, from_py_any, hash64, json_parse, json_string, to_py_dict};
 
 /// Array dimensions for an array instance (`na` × `nb`).
-#[pyclass(module = "kfnetlist._native")]
+#[pyclass(module = "kfnetlist._native", from_py_object)]
 #[derive(Clone, Debug, Hash, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct NetlistArray(pub kfnetlist_core::NetlistArray);
@@ -40,9 +40,9 @@ impl NetlistArray {
         hash64(&(self.na, self.nb))
     }
 
-    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyResult<PyObject> {
+    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyResult<Py<PyAny>> {
         let py = other.py();
-        let Ok(other) = other.downcast::<NetlistArray>() else {
+        let Ok(other) = other.cast::<NetlistArray>() else {
             return Ok(py.NotImplemented());
         };
         let other = other.borrow();
@@ -59,7 +59,7 @@ impl NetlistArray {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 
@@ -89,7 +89,7 @@ impl NetlistArray {
 ///
 /// Declared `subclass` so `PlacedInstance` (which adds placement geometry) can
 /// extend it; this adds no fields and does not change the wire format.
-#[pyclass(module = "kfnetlist._native", subclass)]
+#[pyclass(module = "kfnetlist._native", subclass, from_py_object)]
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct NetlistInstance(pub kfnetlist_core::NetlistInstance);
@@ -194,9 +194,9 @@ impl NetlistInstance {
         self.0.normalize();
     }
 
-    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyResult<PyObject> {
+    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyResult<Py<PyAny>> {
         let py = other.py();
-        let Ok(other) = other.downcast::<NetlistInstance>() else {
+        let Ok(other) = other.cast::<NetlistInstance>() else {
             return Ok(py.NotImplemented());
         };
         let other = other.borrow();
@@ -221,7 +221,7 @@ impl NetlistInstance {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 

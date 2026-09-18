@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/kfnetlist-core", "crates/kfnetlist-python"]
+members = ["crates/kfnetlist-core", "crates/kfnetlist-python", "crates/kfnetlist-extract", "crates/kfnetlist-extract-python"]
 default-members = ["crates/kfnetlist-core"]
 resolver = "2"
 

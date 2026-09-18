@@ -25,11 +25,11 @@ impl NetMemberPython for NetMember {
     fn from_py(obj: &Bound<'_, PyAny>) -> PyResult<Self> {
         // PortArrayRef must be checked before PortRef because it inherits
         // from it.
-        if let Ok(b) = obj.downcast::<PortArrayRef>() {
+        if let Ok(b) = obj.cast::<PortArrayRef>() {
             Ok(NetMember::ArrayRef(PortArrayRefData::from_py(b)))
-        } else if let Ok(b) = obj.downcast::<PortRef>() {
+        } else if let Ok(b) = obj.cast::<PortRef>() {
             Ok(NetMember::Ref(b.borrow().0.clone()))
-        } else if let Ok(b) = obj.downcast::<NetlistPort>() {
+        } else if let Ok(b) = obj.cast::<NetlistPort>() {
             Ok(NetMember::Port(b.borrow().0.clone()))
         } else {
             Err(PyTypeError::new_err(
@@ -42,7 +42,7 @@ impl NetMemberPython for NetMember {
 /// A net: an unordered collection of port members that share electrical
 /// connectivity. Internally stored sorted by (kind, fields) for stable
 /// equality and hashing.
-#[pyclass(module = "kfnetlist._native")]
+#[pyclass(module = "kfnetlist._native", from_py_object)]
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Net(pub kfnetlist_core::Net);
@@ -85,7 +85,7 @@ impl Net {
 
     fn __iter__(slf: PyRef<'_, Self>) -> PyResult<Py<NetIter>> {
         let py = slf.py();
-        let mut objs: Vec<PyObject> = Vec::with_capacity(slf.members.len());
+        let mut objs: Vec<Py<PyAny>> = Vec::with_capacity(slf.members.len());
         for m in &slf.members {
             objs.push(m.clone().into_py_obj(py)?.unbind());
         }
@@ -115,9 +115,9 @@ impl Net {
         hash64(&self.members)
     }
 
-    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyResult<PyObject> {
+    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyResult<Py<PyAny>> {
         let py = other.py();
-        let Ok(other) = other.downcast::<Net>() else {
+        let Ok(other) = other.cast::<Net>() else {
             return Ok(py.NotImplemented());
         };
         let other = other.borrow();
@@ -169,7 +169,7 @@ impl Net {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 
@@ -198,7 +198,7 @@ impl Net {
 
 #[pyclass(module = "kfnetlist._native")]
 pub struct NetIter {
-    items: std::vec::IntoIter<PyObject>,
+    items: std::vec::IntoIter<Py<PyAny>>,
 }
 
 #[pymethods]
@@ -207,7 +207,7 @@ impl NetIter {
         slf
     }
 
-    fn __next__(mut slf: PyRefMut<'_, Self>) -> Option<PyObject> {
+    fn __next__(mut slf: PyRefMut<'_, Self>) -> Option<Py<PyAny>> {
         slf.items.next()
     }
 }

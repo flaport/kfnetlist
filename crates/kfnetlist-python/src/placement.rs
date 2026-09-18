@@ -30,7 +30,7 @@ use kfnetlist_core::placement::{merge_extras, PlacedExtra, PlacedInstanceWire, P
 ///
 /// This is purely geometric. The placed cell's *name* is an intrinsic property
 /// of the instance and lives on [`PlacedInstance::cell`], not here.
-#[pyclass(module = "kfnetlist._native")]
+#[pyclass(module = "kfnetlist._native", from_py_object)]
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Placement(pub kfnetlist_core::Placement);
@@ -100,9 +100,9 @@ impl Placement {
         Ok(())
     }
 
-    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> PyObject {
+    fn __richcmp__(&self, other: &Bound<'_, PyAny>, op: CompareOp) -> Py<PyAny> {
         let py = other.py();
-        let Ok(other) = other.downcast::<Placement>() else {
+        let Ok(other) = other.cast::<Placement>() else {
             return py.NotImplemented();
         };
         let other = other.borrow();
@@ -126,7 +126,7 @@ impl Placement {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 
@@ -152,7 +152,7 @@ impl Placement {
 /// Instance carrying placement geometry. Subclass of [`NetlistInstance`]: the
 /// connectivity fields (`kcl`, `component`, `settings`, `array`, `name`) live
 /// on the parent layer; the placed `cell` name and `placement` are stored here.
-#[pyclass(module = "kfnetlist._native", extends = NetlistInstance)]
+#[pyclass(module = "kfnetlist._native", extends = NetlistInstance, from_py_object)]
 #[derive(Clone, Debug)]
 pub struct PlacedInstance(pub PlacedExtra);
 crate::core_wrapper!(PlacedInstance, PlacedExtra);
@@ -235,7 +235,7 @@ impl PlacedInstance {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 
@@ -499,7 +499,7 @@ impl PlacedNetlist {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 

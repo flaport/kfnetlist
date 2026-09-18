@@ -108,3 +108,29 @@ complete `test_extraction_parity.py` module. After Rust porting starts, a change
 reference needs an explained contract decision; do not regenerate from candidate
 behavior to hide a difference. The recording helper reads expected results from
 the pinned oracle and only writes after successful comparisons.
+
+## Stage 2: single native image
+
+`kfnetlist-extract` is a Python-independent crate over RLayout. Its
+`connected_geometry` primitive borrows a layout, validates owned cell/layer
+identities and returns the native owner-retaining extraction context. Typed port
+and cell metadata carry values, never Python objects or callbacks. The standalone
+example retains its graph after dropping the source and extraction wrappers.
+
+`kfnetlist-extract-python` is an rlib registered by `rlayout-extension`. Its
+safe Rust interop guards borrow the existing RLayout Python wrapper. Both
+bindings and the engine live in one extension image. The independent model
+extension stays engine-free. Do not pass Rust objects or capsules between these
+images. Model results cross the boundary as ordinary Python values.
+
+Both binding crates use PyO3 0.29; model conversion uses pythonize 0.29. Migration
+reference: https://pyo3.rs/main/migration and https://docs.rs/pythonize/0.29.0/ .
+The extraction dependencies pin RLayout's integration bootstrap. The parent
+workspace patches those packages to its current local crates, so integration
+uses exactly one Rust type/engine identity. No Cargo dependency cycle exists:
+rlayout-extension -> extraction bindings -> rlayout-python -> rlayout.
+
+The model-only Python package still imports without RLayout. Extraction is
+provided by the common RLayout wheel. Stage 2 introduces the bridge but does not
+yet replace the public extraction algorithms; Stage 3 handles that cutover.
+Stage 2 implementation awaits post-push validation.

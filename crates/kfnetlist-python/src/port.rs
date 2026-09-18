@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Cell-level port of a netlist (top-level pin).
-#[pyclass(module = "kfnetlist._native")]
+#[pyclass(module = "kfnetlist._native", from_py_object)]
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct NetlistPort(pub kfnetlist_core::NetlistPort);
@@ -18,7 +18,7 @@ crate::core_wrapper!(NetlistPort, kfnetlist_core::NetlistPort);
 ///
 /// `PortArrayRef` extends this class, so `isinstance(x, PortRef)` is true
 /// for both plain and array references.
-#[pyclass(module = "kfnetlist._native", subclass)]
+#[pyclass(module = "kfnetlist._native", subclass, from_py_object)]
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct PortRef(pub kfnetlist_core::PortRef);
@@ -28,7 +28,7 @@ crate::core_wrapper!(PortRef, kfnetlist_core::PortRef);
 ///
 /// Subclass of [`PortRef`]. The `instance` and `port` fields live on the
 /// parent layer; only the array indices are stored on the child.
-#[pyclass(module = "kfnetlist._native", extends = PortRef)]
+#[pyclass(module = "kfnetlist._native", extends = PortRef, from_py_object)]
 #[derive(Clone, Debug)]
 pub struct PortArrayRef {
     #[pyo3(get, set)]
@@ -78,11 +78,11 @@ const KIND_PORT_ARRAY_REF: u8 = 2;
 
 fn kind_of(obj: &Bound<'_, PyAny>) -> Option<u8> {
     // PortArrayRef must be checked before PortRef because it inherits from it.
-    if obj.downcast::<NetlistPort>().is_ok() {
+    if obj.cast::<NetlistPort>().is_ok() {
         Some(KIND_NETLIST_PORT)
-    } else if obj.downcast::<PortArrayRef>().is_ok() {
+    } else if obj.cast::<PortArrayRef>().is_ok() {
         Some(KIND_PORT_ARRAY_REF)
-    } else if obj.downcast::<PortRef>().is_ok() {
+    } else if obj.cast::<PortRef>().is_ok() {
         Some(KIND_PORT_REF)
     } else {
         None
@@ -109,14 +109,14 @@ impl NetlistPort {
         hash64(&self.name)
     }
 
-    fn __richcmp__(&self, py: Python<'_>, other: &Bound<'_, PyAny>, op: CompareOp) -> PyObject {
+    fn __richcmp__(&self, py: Python<'_>, other: &Bound<'_, PyAny>, op: CompareOp) -> Py<PyAny> {
         let kind = match kind_of(other) {
             Some(k) => k,
             None => return richcmp_result(py, None),
         };
         let (lt, eq) = match kind {
             KIND_NETLIST_PORT => {
-                let other = other.downcast::<NetlistPort>().unwrap().borrow();
+                let other = other.cast::<NetlistPort>().unwrap().borrow();
                 (self.name < other.name, self.name == other.name)
             }
             // NetlistPort always sorts before PortRef / PortArrayRef.
@@ -134,7 +134,7 @@ impl NetlistPort {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 
@@ -192,7 +192,7 @@ impl PortRef {
         hash64(&(&self.instance, &self.port))
     }
 
-    fn __richcmp__(&self, py: Python<'_>, other: &Bound<'_, PyAny>, op: CompareOp) -> PyObject {
+    fn __richcmp__(&self, py: Python<'_>, other: &Bound<'_, PyAny>, op: CompareOp) -> Py<PyAny> {
         let kind = match kind_of(other) {
             Some(k) => k,
             None => return richcmp_result(py, None),
@@ -200,7 +200,7 @@ impl PortRef {
         let (lt, eq) = match kind {
             KIND_NETLIST_PORT => (false, false),
             KIND_PORT_REF => {
-                let other = other.downcast::<PortRef>().unwrap().borrow();
+                let other = other.cast::<PortRef>().unwrap().borrow();
                 let s = (&self.instance, &self.port);
                 let o = (&other.instance, &other.port);
                 (s < o, s == o)
@@ -234,7 +234,7 @@ impl PortRef {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 
@@ -276,7 +276,7 @@ impl PortArrayRef {
         py: Python<'_>,
         other: &Bound<'_, PyAny>,
         op: CompareOp,
-    ) -> PyObject {
+    ) -> Py<PyAny> {
         let kind = match kind_of(other) {
             Some(k) => k,
             None => return richcmp_result(py, None),
@@ -284,7 +284,7 @@ impl PortArrayRef {
         let (lt, eq) = match kind {
             KIND_NETLIST_PORT | KIND_PORT_REF => (false, false),
             KIND_PORT_ARRAY_REF => {
-                let other = other.downcast::<PortArrayRef>().unwrap().borrow();
+                let other = other.cast::<PortArrayRef>().unwrap().borrow();
                 let other_parent = other.as_ref();
                 let self_parent = slf.as_ref();
                 let s = (&self_parent.instance, &self_parent.port, slf.ia, slf.ib);
@@ -334,7 +334,7 @@ impl PortArrayRef {
         cls: &Bound<'_, PyType>,
         _source_type: &Bound<'_, PyAny>,
         _handler: &Bound<'_, PyAny>,
-    ) -> PyResult<PyObject> {
+    ) -> PyResult<Py<PyAny>> {
         crate::pydantic_core_schema(cls)
     }
 
