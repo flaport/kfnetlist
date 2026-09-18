@@ -134,3 +134,7 @@ The model-only Python package still imports without RLayout. Extraction is
 provided by the common RLayout wheel. Stage 2 introduces the bridge but does not
 yet replace the public extraction algorithms; Stage 3 handles that cutover.
 Stage 2 implementation awaits post-push validation.
+
+The private RLayout source pin uses SSH, matching the parent checkout. Cargo
+fetches may need `CARGO_NET_GIT_FETCH_WITH_CLI=true` with the user's existing
+Git credentials. The parent already configures that setting.
