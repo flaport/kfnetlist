@@ -58,7 +58,7 @@ fn _layer_display_name(info: &Bound<'_, PyAny>) -> PyResult<String> {
 fn _discover_layer_regions(py: Python<'_>, l2n: &Bound<'_, PyAny>) -> PyResult<Py<PyAny>> {
     wrap_regions(
         py,
-        parser::discover_layers(&mut interop::extraction(l2n)?).map_err(domain_error)?,
+        parser::discover_layers(&mut *interop::extraction(l2n)?).map_err(domain_error)?,
     )
 }
 #[pyfunction]
@@ -75,7 +75,7 @@ fn _net_shapes_by_layer(
         .collect::<Vec<_>>();
     wrap_regions(
         py,
-        parser::net_shapes(&interop::net(net)?, &interop::extraction(l2n)?, &views)
+        parser::net_shapes(&*interop::net(net)?, &*interop::extraction(l2n)?, &views)
             .map_err(domain_error)?,
     )
 }
@@ -97,7 +97,7 @@ fn _serialize_net(
         .collect::<Vec<_>>();
     let extraction = l2n.map(interop::extraction).transpose()?;
     let result = parser::serialize_net(
-        &interop::net(net)?,
+        &*interop::net(net)?,
         extraction.as_deref(),
         &views,
         subc_id_filter.as_ref(),
@@ -127,7 +127,7 @@ fn _serialize_circuit(
     wire(
         py,
         &parser::serialize_circuit(
-            &interop::circuit(circuit)?,
+            &*interop::circuit(circuit)?,
             extraction.as_deref(),
             &views,
             &filters(
@@ -154,7 +154,7 @@ fn parse_l2n(
     wire(
         py,
         &parser::parse_l2n(
-            &mut interop::extraction(l2n)?,
+            &mut *interop::extraction(l2n)?,
             flatten,
             &filters(
                 include_layers,
@@ -205,7 +205,7 @@ fn detect_shorts(
 ) -> PyResult<Vec<Py<PyAny>>> {
     let allowed = layers(short_layers)?;
     let results = kfnetlist_extract::shorts::detect_shorts(
-        &mut interop::extraction(l2n)?,
+        &mut *interop::extraction(l2n)?,
         allowed.as_ref(),
         circuit_name,
     )

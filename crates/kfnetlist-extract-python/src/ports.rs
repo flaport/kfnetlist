@@ -142,7 +142,7 @@ fn check_connection(
             snapped,
         },
     )
-    .map_err(domain_error)
+    .map_err(interop::native_error)
 }
 #[pyfunction]
 #[pyo3(signature=(cell,port_types=None,*,allow_width_mismatch=false))]
