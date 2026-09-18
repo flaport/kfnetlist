@@ -66,5 +66,7 @@ def serialize_setting(setting: Any) -> Any:
     if isinstance(setting, tuple):
         return tuple(serialize_setting(s) for s in setting)
     if _is_serializable_shape(setting):
-        return f"!#{setting.__class__.__name__} {setting!s}"
+        native_string = getattr(setting, "to_s", None)
+        text = native_string() if native_string is not None else str(setting)
+        return f"!#{setting.__class__.__name__} {text}"
     return setting

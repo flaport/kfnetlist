@@ -72,3 +72,16 @@ Record exact totals and blockers after execution. The new differential cases
 must not silently pass when both implementations unexpectedly raise; valid-input
 cases require a successful reference execution. The explicitly malformed cases
 compare exceptions and warnings.
+
+### Baseline corrections found during characterization
+
+Native array transforms use `Instance.element_transform(...).s_trans()` instead
+of constructing an unbound `InstElement`. Parser transforms and recognized
+native settings use native string serialization instead of Python's default
+object-address repr. These are backend adapter repairs, made before porting;
+address strings are not normalized away by the differential harness.
+
+The parent also repairs extraction Region ownership: native delegate transfer
+preserves registered deep-layer identity, and materialization releases only lazy
+source leases, retaining extraction owners. Existing parser golden files pass
+unchanged after that repair.
