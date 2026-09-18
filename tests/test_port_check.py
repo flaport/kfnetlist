@@ -9,9 +9,9 @@ import pytest
 from kfnetlist import PortCheck, check_connection
 
 if TYPE_CHECKING:
-    from klayout import db as kdb
+    from rlayout import db as kdb
 else:
-    kdb = pytest.importorskip("klayout.db")
+    kdb = pytest.importorskip("rlayout.db")
 
 
 @dataclass

@@ -66,7 +66,7 @@ def detect_shorts(
         return []
 
     netlist = l2n.netlist()
-    cell_name = circuit_name or l2n.internal_top_cell().name
+    cell_name = circuit_name or l2n.internal_layout().cell_name(l2n.internal_layout().top_cell_index())
     circuit = netlist.circuit_by_name(cell_name)
     if circuit is None:
         return []

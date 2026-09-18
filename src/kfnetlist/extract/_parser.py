@@ -27,10 +27,7 @@ def _discover_layer_regions(
     """Map each registered LayerInfo to its L2N region handle."""
     internal_ly = l2n.internal_layout()
     regions: dict[kdb.LayerInfo, kdb.Region] = {}
-    for li in range(internal_ly.layers()):
-        if not internal_ly.is_valid_layer(li):
-            continue
-        info = internal_ly.get_info(li)
+    for li, info in internal_ly.layers():
         try:
             region = l2n.layer_by_index(li)
         except RuntimeError:
@@ -108,7 +105,7 @@ def _serialize_net(
             for poly in shapes.each():
                 polys.append([[p.x, p.y] for p in poly.each_point_hull()])
                 for h in range(poly.holes()):
-                    holes.append([[p.x, p.y] for p in poly.each_point_hole(h)])
+                    holes.append([[p.x, p.y] for p in poly.downcast().hole_points(h)])
             layer_to_polygons[name] = polys
             if holes:
                 layer_to_holes[name] = holes
@@ -206,7 +203,7 @@ def parse_l2n(
         ``{"top_circuit": str, "layers": list[{"name": str, "layer": int, "datatype": int}],
         "circuits": {name: {...}, ...}}``.
     """
-    top_cell_name = l2n.internal_top_cell().name
+    top_cell_name = l2n.internal_layout().cell_name(l2n.internal_layout().top_cell_index())
     layer_regions = _discover_layer_regions(l2n)
 
     incl_layers = set(include_layers) if include_layers is not None else None

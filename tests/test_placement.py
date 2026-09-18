@@ -252,7 +252,7 @@ def test_plain_netlist_serialization_unchanged() -> None:
 
 def test_placement_for_reads_transform_and_bbox() -> None:
     from kfnetlist.extract._algo import _placement_for
-    from klayout import db as kdb
+    from rlayout import db as kdb
 
     bbox = types.SimpleNamespace(left=-1.0, bottom=-2.0, right=3.0, top=4.0)
     inst = types.SimpleNamespace(

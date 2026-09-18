@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-kdb = pytest.importorskip("klayout.db")
+kdb = pytest.importorskip("rlayout.db")
 
 from kfnetlist.extract._shorts import (  # noqa: E402
     ShortResult,
@@ -44,12 +44,12 @@ def _make_l2n_with_short() -> tuple[kdb.LayoutToNetlist, str]:
     # Net "A": rectangle at x=[0, 1000], y=[0, 500] on layer 1
     top.shapes(l1).insert(kdb.Box(0, 0, 1000, 500))
     # Net "A" label
-    top.shapes(l1).insert(kdb.Text("A", kdb.Trans(kdb.Point(500, 250))))
+    top.shapes(l1).insert(kdb.Text("A", kdb.Trans(500, 250)))
 
     # Net "B": rectangle at x=[2000, 3000], y=[0, 500] on layer 1
     top.shapes(l1).insert(kdb.Box(2000, 0, 3000, 500))
     # Net "B" label
-    top.shapes(l1).insert(kdb.Text("B", kdb.Trans(kdb.Point(2500, 250))))
+    top.shapes(l1).insert(kdb.Text("B", kdb.Trans(2500, 250)))
 
     # Layer 2: two polygons, one per net, that OVERLAP in the middle
     # Net A's via region: x=[800, 1500], y=[100, 400]
@@ -58,7 +58,7 @@ def _make_l2n_with_short() -> tuple[kdb.LayoutToNetlist, str]:
     top.shapes(l2).insert(kdb.Box(1200, 100, 2200, 400))
 
     # Build L2N with connectivity: layer1 ↔ layer2
-    l2n = kdb.LayoutToNetlist(kdb.RecursiveShapeIterator(ly, top, []))
+    l2n = kdb.LayoutToNetlist.from_cell(top)
     region1 = l2n.make_layer(l1, "M1")
     region2 = l2n.make_layer(l2, "M2")
     l2n.connect(region1)
@@ -78,13 +78,13 @@ def _make_l2n_no_short() -> tuple[kdb.LayoutToNetlist, str]:
 
     # Net "A": left rectangle
     top.shapes(l1).insert(kdb.Box(0, 0, 1000, 500))
-    top.shapes(l1).insert(kdb.Text("A", kdb.Trans(kdb.Point(500, 250))))
+    top.shapes(l1).insert(kdb.Text("A", kdb.Trans(500, 250)))
 
     # Net "B": right rectangle, no overlap
     top.shapes(l1).insert(kdb.Box(2000, 0, 3000, 500))
-    top.shapes(l1).insert(kdb.Text("B", kdb.Trans(kdb.Point(2500, 250))))
+    top.shapes(l1).insert(kdb.Text("B", kdb.Trans(2500, 250)))
 
-    l2n = kdb.LayoutToNetlist(kdb.RecursiveShapeIterator(ly, top, []))
+    l2n = kdb.LayoutToNetlist.from_cell(top)
     region1 = l2n.make_layer(l1, "M1")
     l2n.connect(region1)
     l2n.extract_netlist()
@@ -111,11 +111,11 @@ def _make_l2n_unconnected_overlap() -> tuple[kdb.LayoutToNetlist, str]:
 
     # Two separate polygons → two nets after extraction
     top.shapes(l1).insert(kdb.Box(0, 0, 500, 500))
-    top.shapes(l1).insert(kdb.Text("NET_A", kdb.Trans(kdb.Point(250, 250))))
+    top.shapes(l1).insert(kdb.Text("NET_A", kdb.Trans(250, 250)))
     top.shapes(l1).insert(kdb.Box(1000, 0, 1500, 500))
-    top.shapes(l1).insert(kdb.Text("NET_B", kdb.Trans(kdb.Point(1250, 250))))
+    top.shapes(l1).insert(kdb.Text("NET_B", kdb.Trans(1250, 250)))
 
-    l2n = kdb.LayoutToNetlist(kdb.RecursiveShapeIterator(ly, top, []))
+    l2n = kdb.LayoutToNetlist.from_cell(top)
     region1 = l2n.make_layer(l1, "M1")
     l2n.connect(region1)
     l2n.extract_netlist()

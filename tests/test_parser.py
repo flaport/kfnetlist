@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
-from klayout import db as kdb
+from rlayout import db as kdb
 
 from kfnetlist.extract._parser import (
     _discover_layer_regions,
@@ -37,15 +37,15 @@ def _build_l2n() -> tuple[kdb.LayoutToNetlist, kdb.LayerInfo, kdb.LayerInfo]:
 
     leaf = ly.create_cell("LEAF")
     leaf.shapes(l1).insert(kdb.Box(0, 0, 1000, 1000))
-    leaf.shapes(l1).insert(kdb.Text("PIN_A", kdb.Trans(kdb.Point(500, 500))))  # ty: ignore[no-matching-overload]
+    leaf.shapes(l1).insert(kdb.Text("PIN_A", kdb.Trans(500, 500)))  # ty: ignore[no-matching-overload]
 
     top = ly.create_cell("TOP")
     top.insert(kdb.CellInstArray(leaf.cell_index(), kdb.Trans()))
     top.shapes(l1).insert(kdb.Box(0, 0, 2000, 100))
     top.shapes(l2).insert(kdb.Box(500, 500, 1500, 600))
-    top.shapes(l1).insert(kdb.Text("NET_X", kdb.Trans(kdb.Point(100, 50))))  # ty: ignore[no-matching-overload]
+    top.shapes(l1).insert(kdb.Text("NET_X", kdb.Trans(100, 50)))  # ty: ignore[no-matching-overload]
 
-    l2n = kdb.LayoutToNetlist(kdb.RecursiveShapeIterator(ly, top, []))
+    l2n = kdb.LayoutToNetlist.from_cell(top)
     r1 = l2n.make_layer(l1, "M1")
     r2 = l2n.make_layer(l2, "M2")
     l2n.connect(r1)
