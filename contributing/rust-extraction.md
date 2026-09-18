@@ -253,3 +253,30 @@ CI gate. The extraction corpus still passes 485 tests and the four schematic
 notebooks pass with release wheels. Final acceptance awaits the native fix and
 full-suite run; neither interrupted routing probes nor partial runs count as a
 full pass. The parent `work.md` records the measured baseline and validation plan.
+
+
+### Final migration acceptance (2026-09-18)
+
+Runtime parent `d630d8d` with KFNetlist `892e358` and KFactory `53c43c1` passes
+all **3,134 KFactory tests / 4 skips** in **168.25 seconds** (184.80 seconds
+including startup/shutdown/reporting). Parent report:
+`target/kfactory-reports/kfactory-full-20260918-143914.log`, exit 0.
+All **485 KFNetlist tests** pass, including **269 frozen cases / 279 reference
+observations / zero differences**. The four affected schematic notebooks pass
+through the named `rlayout` kernel (35 original code cells plus four guards).
+Parent Rust/Python tests and native ownership sanitizers also pass.
+
+The pre-existing native instance bottleneck is fixed using stable editable
+references and explicit replacement-alias updates. A 512-instance retained
+append/property/transform workload falls from 2.0397 to 0.01854 seconds. The
+parent CI now runs the guarded full suite against its release wheel with a
+12-minute test limit and retained reports, and gates documentation publication
+on success. Hosted run `35347114416` passes 3,134 / skips 4 in 315.87 seconds
+(332.20 seconds including startup/shutdown); its report artifact is retained.
+
+https://github.com/doplaydo/rlayout/actions/runs/35347114416
+
+This completes acceptance of the Rust migration. The Rust-only extraction
+example, independent model installation, paired-wheel import orders, unchanged
+signatures, fixture replay and fresh model source-build isolation are validated
+as recorded above. No Python extraction algorithm or runtime fallback remains.
