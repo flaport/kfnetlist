@@ -18,17 +18,23 @@ fn layers(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<HashSet<db::Layer
         })
         .transpose()
 }
+fn names(value: Option<&Bound<'_, PyAny>>) -> PyResult<Option<HashSet<String>>> {
+    value
+        .filter(|v| !v.is_none())
+        .map(|v| v.try_iter()?.map(|item| item?.extract()).collect())
+        .transpose()
+}
 fn filters(
     include_layers: Option<&Bound<'_, PyAny>>,
     exclude_layers: Option<&Bound<'_, PyAny>>,
-    include_instances: Option<HashSet<String>>,
-    exclude_instances: Option<HashSet<String>>,
+    include_instances: Option<&Bound<'_, PyAny>>,
+    exclude_instances: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Filters> {
     Ok(Filters {
         include_layers: layers(include_layers)?,
         exclude_layers: layers(exclude_layers)?,
-        include_instances,
-        exclude_instances,
+        include_instances: names(include_instances)?,
+        exclude_instances: names(exclude_instances)?,
     })
 }
 fn wrap_regions(py: Python<'_>, regions: parser::LayerRegions) -> PyResult<Py<PyAny>> {
@@ -113,8 +119,8 @@ fn _serialize_circuit(
     circuit: &Bound<'_, PyAny>,
     l2n: Option<&Bound<'_, PyAny>>,
     layer_regions: &Bound<'_, PyAny>,
-    include_instances: Option<HashSet<String>>,
-    exclude_instances: Option<HashSet<String>>,
+    include_instances: Option<&Bound<'_, PyAny>>,
+    exclude_instances: Option<&Bound<'_, PyAny>>,
     include_layers: Option<&Bound<'_, PyAny>>,
     exclude_layers: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
@@ -148,8 +154,8 @@ fn parse_l2n(
     flatten: bool,
     include_layers: Option<&Bound<'_, PyAny>>,
     exclude_layers: Option<&Bound<'_, PyAny>>,
-    include_instances: Option<HashSet<String>>,
-    exclude_instances: Option<HashSet<String>>,
+    include_instances: Option<&Bound<'_, PyAny>>,
+    exclude_instances: Option<&Bound<'_, PyAny>>,
 ) -> PyResult<Py<PyAny>> {
     wire(
         py,
@@ -174,9 +180,9 @@ fn l2n_to_json(
     flatten: bool,
     include_layers: Option<&Bound<'_, PyAny>>,
     exclude_layers: Option<&Bound<'_, PyAny>>,
-    include_instances: Option<HashSet<String>>,
-    exclude_instances: Option<HashSet<String>>,
-    indent: Option<usize>,
+    include_instances: Option<&Bound<'_, PyAny>>,
+    exclude_instances: Option<&Bound<'_, PyAny>>,
+    indent: Option<i64>,
 ) -> PyResult<String> {
     let value = parse_l2n(
         py,
